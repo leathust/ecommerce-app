@@ -1,0 +1,40 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Prevent content negotiation and directory browsing from bypassing routing.
+    Options -MultiViews -Indexes
+
+    # Redirect browser requests containing /public to the clean project URL.
+    # THE_REQUEST ensures internally rewritten requests are not redirected.
+    RewriteCond %{THE_REQUEST} \s/+(.*/)?public(?:[/\s?]) [NC]
+    RewriteRule ^public(?:/(.*))?$ $1 [R=301,L,NE]
+
+    # Never expose Laravel source, dependencies, tests, runtime data or docs.
+    RewriteRule ^(?:app|bootstrap|config|database|docs|resources|routes|storage|tests|vendor)(?:/|$) - [F,L,NC]
+
+    # Never expose project metadata, CLI entry points or dependency manifests.
+    RewriteRule ^(?:artisan|composer\.(?:json|lock)|package(?:-lock)?\.json|phpunit\.xml|vite\.config\.js|README\.md|server\.php)$ - [F,L,NC]
+
+    # Let Apache continue processing requests already rewritten into public/.
+    RewriteRule ^public(?:/|$) - [L]
+
+    # Internally expose only Laravel's public directory while keeping it out of URLs.
+    RewriteRule ^$ public/ [L]
+    RewriteRule ^(.+)$ public/$1 [L]
+</IfModule>
+
+# Block dotfiles such as .env, .git, .htaccess and editor metadata.
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# Block common backup/config/source artifacts if one is accidentally added later.
+<FilesMatch "(?i)\.(?:bak|conf|dist|env|ini|log|sql|sqlite|yml|yaml)$">
+    Require all denied
+</FilesMatch>
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set X-Frame-Options "SAMEORIGIN"
+</IfModule>
