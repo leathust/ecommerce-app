@@ -3,9 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreContactRequest;
+use App\Mail\ContactSubmissionMail;
 use App\Models\Contact;
+use App\Support\SystemMailMetadata;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
+use Throwable;
 
 class ContactController extends Controller
 {
@@ -16,9 +20,21 @@ class ContactController extends Controller
         ]);
     }
 
-    public function store(StoreContactRequest $request): RedirectResponse
+    public function store(StoreContactRequest $request, SystemMailMetadata $mailMetadata): RedirectResponse
     {
-        Contact::create($request->safe()->except('website'));
+        $contact = Contact::create($request->safe()->except('website'));
+        $recipient = $mailMetadata->contactRecipient();
+
+        if ($recipient !== null) {
+            try {
+                Mail::to($recipient)->send(new ContactSubmissionMail(
+                    $contact,
+                    $mailMetadata->senderName(),
+                ));
+            } catch (Throwable $exception) {
+                report($exception);
+            }
+        }
 
         return redirect()
             ->route('contact')

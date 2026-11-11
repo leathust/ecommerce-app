@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Brand extends Model
 {
+    use \App\Models\Concerns\HasCatalogImage;
+
     protected $fillable = ['name_vi', 'name_en', 'slug', 'image_url', 'status'];
     protected $casts = ['status' => 'boolean'];
 

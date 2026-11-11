@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Category extends Model
 {
+    use \App\Models\Concerns\HasCatalogImage;
+
     protected $fillable = ['parent_id', 'name_vi', 'name_en', 'slug', 'image_url', 'sort_order', 'status'];
     protected $casts = ['status' => 'boolean'];
 

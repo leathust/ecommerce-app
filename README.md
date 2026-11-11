@@ -156,12 +156,63 @@ Laravel bỏ qua migration đã chạy và chỉ áp dụng migration mới. Kh�
 
 ## 7. Seeder và phân quyền
 
-`DatabaseSeeder` gọi `RolePermissionSeeder`, rồi `AdminUserSeeder`.
+`DatabaseSeeder` gọi các seeder RBAC, super admin, cài đặt hệ thống và dữ liệu mẫu nghiệp vụ. Trên database đang vận hành, nên gọi đúng seeder cần thiết thay vì chạy lại toàn bộ dữ liệu mẫu.
 
 ```powershell
 php artisan db:seed --class=RolePermissionSeeder
 php artisan db:seed --class=AdminUserSeeder
+php artisan db:seed --class=SystemSettingSeeder
+php artisan db:seed --class=MenuSeeder
 ```
+
+`SystemSettingSeeder` chỉ chèn key registry còn thiếu bằng `insertOrIgnore`, không cập nhật hoặc xóa giá trị admin đã chỉnh. Giá trị mặc định lấy từ allowlist `config/system_settings.php`; seeder không quét hay sao chép credential từ `.env`.
+
+### Vận hành Menu động
+
+Trên database hiện hữu, dùng quy trình không phá hủy sau:
+
+```powershell
+php artisan migrate:status
+php artisan menus:check
+php artisan migrate
+php artisan db:seed --class=MenuSeeder
+php artisan optimize:clear
+php artisan menus:check
+```
+
+`MenuSeeder` đọc cây mặc định đệ quy từ `config/menus.php` và xử lý độc lập từng location `header`/`footer`. Cây mặc định có thể sâu tối đa `menus.max_depth` (hiện là 4); nếu config vượt giới hạn, toàn bộ transaction bị rollback thay vì seed một phần. Seeder chỉ backfill location hoàn toàn trống; nếu location đã có dù chỉ một item — kể cả cây 2 cấp cũ hoặc node cấp 3–4 — toàn bộ location đó được giữ nguyên. Vì vậy chạy lại không tạo trùng và không ghi đè nhãn, URL, trạng thái hay thứ tự do admin đã chỉnh. Khóa tự nhiên nội bộ gồm location, parent, loại link, đích link và cặp nhãn mặc định; hai nhãn khác nhau vẫn có thể cùng trỏ tới một route.
+
+`php artisan menus:check` là kiểm tra chỉ đọc cho toàn bộ adjacency list. Lệnh trả exit code `1` nếu phát hiện cycle, parent không tồn tại, parent khác location hoặc depth vượt giới hạn; lệnh không tự sửa, di chuyển hay xóa menu. Hãy chạy trước deploy để phát hiện dữ liệu legacy không hợp lệ và chạy lại sau migrate/seed/cache clear. Snapshot/backup database vẫn là bước bắt buộc trước khi deploy production.
+
+`MenuSeeder` được gọi trong `DatabaseSeeder` vì đây là dữ liệu điều hướng bắt buộc, không phải dữ liệu demo. Tuy nhiên `DatabaseSeeder` còn gọi customer/product/order demo, nên trên production hoặc database đang vận hành hãy chạy riêng `--class=MenuSeeder` như trên, không chạy toàn bộ `php artisan db:seed`.
+
+Fallback hard-code mặc định đã tắt. Nếu deploy gặp sự cố và cả location cần dùng đang trống, có thể tạm đặt `MENU_FALLBACK_ENABLED=true`, chạy `php artisan config:clear`, sau đó backfill/khôi phục dữ liệu. Khi menu database đã hiển thị đúng, đặt lại `false` và chạy `php artisan optimize:clear`. Không xóa bảng hoặc dùng `migrate:fresh` để khôi phục menu.
+
+#### Rollback code Menu 4 cấp
+
+- Không rollback migration và không xóa các hàng cấp 3–4: nâng cấp 4 cấp không thêm schema mới, dữ liệu vẫn dùng `menus.parent_id` hiện hữu.
+- Sao lưu database, đưa code về release cần rollback rồi chạy `php artisan optimize:clear`. Không chạy `MenuSeeder` với mục đích “hạ cấp” vì seeder không sửa location đã có dữ liệu.
+- Release cũ chỉ hiểu 2 cấp có thể không hiển thị node sâu đầy đủ. Giữ nguyên dữ liệu, dùng maintenance window hoặc bật fallback khẩn cấp nếu location trống, sau đó triển khai lại release hỗ trợ 4 cấp; không kéo node sâu lên root hoặc xóa chúng để chữa cháy.
+- Sau khi triển khai lại code 4 cấp, chạy `php artisan menus:check` và kiểm tra desktop/mobile/footer. Nếu lệnh báo lỗi, sửa cấu trúc qua admin theo từng branch và chạy lại đến khi exit code bằng `0`.
+
+### Vận hành cài đặt hệ thống
+
+Quy trình an toàn cho database hiện hữu:
+
+```powershell
+php artisan migrate:status
+php artisan settings:check
+php artisan db:seed --class=SystemSettingSeeder
+php artisan settings:check
+php artisan storage:link
+php artisan optimize:clear
+```
+
+`settings:check` mặc định chỉ đọc và trả exit code khác `0` nếu có key thiếu/lạ, giá trị sai rule, ảnh đang tham chiếu nhưng bị mất hoặc file trong thư mục managed không còn được tham chiếu. Có thể dùng `php artisan settings:check --fix-missing` để chỉ bổ sung defaults còn thiếu. Lệnh không tự sửa giá trị sai, không xóa key lạ và không xóa ảnh mồ côi; cần kiểm tra từng mục trước khi xử lý thủ công.
+
+Không cần migration bổ sung cho settings: `setting_key` đã có unique index phục vụ lookup và chống trùng; `updated_by` cùng `updated_at` đủ cho metadata cập nhật. Khi rollback một bản phát hành, sao lưu database/storage trước, đưa code về phiên bản tương thích rồi chạy lại `settings:check`; không dùng `migrate:fresh`. Nếu registry cũ chưa biết key mới, key đó chỉ được báo là “không thuộc registry” và vẫn được giữ nguyên.
+
+Ảnh logo/favicon/OG nằm trên disk `public` dưới `system-settings/*`; symlink `public/storage` phải tồn tại để trình duyệt truy cập. Sau khi đổi registry/config hoặc gặp cache cũ, dùng `php artisan optimize:clear`; thao tác lưu trong admin và seeder đều tự xóa cache typed settings.
 
 `RolePermissionSeeder` tạo/cập nhật 5 role và 29 permission. Seeder đồng bộ lại quyền của các role mẫu bằng `sync`, vì vậy chạy lại sẽ thay đổi các chỉnh sửa quyền thủ công trên những role này theo ma trận trong seeder.
 

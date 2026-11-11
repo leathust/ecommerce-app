@@ -19,6 +19,67 @@
     if (e.key === 'Escape' && drawer && drawer.classList.contains('is-open')) setDrawer(false);
   });
 
+  // Recursive desktop dropdowns: click/touch, viewport direction and keyboard Escape.
+  const directToggle = (item) => item?.querySelector(':scope > .main-nav__entry > [data-menu-toggle]');
+  const closeMenuItem = (item) => {
+    item.querySelectorAll('.main-nav__item.is-open').forEach((child) => {
+      child.classList.remove('is-open', 'opens-left');
+      directToggle(child)?.setAttribute('aria-expanded', 'false');
+    });
+    item.classList.remove('is-open', 'opens-left');
+    directToggle(item)?.setAttribute('aria-expanded', 'false');
+  };
+  const positionSubmenu = (item) => {
+    const submenu = item?.querySelector(':scope > [data-menu-submenu]');
+    if (!submenu) return;
+    item.classList.remove('opens-left');
+    requestAnimationFrame(() => {
+      if (submenu.getBoundingClientRect().right > window.innerWidth - 12) item.classList.add('opens-left');
+    });
+  };
+
+  document.querySelectorAll('[data-menu-toggle]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const item = button.closest('[data-menu-item]');
+      const open = !item.classList.contains('is-open');
+      item.parentElement.querySelectorAll(':scope > .main-nav__item.is-open').forEach((sibling) => {
+        if (sibling !== item) closeMenuItem(sibling);
+      });
+      item.classList.remove('is-escape-closed');
+      item.classList.toggle('is-open', open);
+      button.setAttribute('aria-expanded', String(open));
+      if (open) positionSubmenu(item); else closeMenuItem(item);
+    });
+  });
+
+  document.querySelectorAll('[data-menu-item]').forEach((item) => {
+    item.addEventListener('pointerenter', () => positionSubmenu(item));
+    item.addEventListener('focusin', () => {
+      item.classList.remove('is-escape-closed');
+      positionSubmenu(item);
+    });
+    item.addEventListener('focusout', (event) => {
+      if (!item.contains(event.relatedTarget)) item.classList.remove('is-escape-closed');
+    });
+  });
+
+  document.addEventListener('click', (event) => {
+    if (event.target.closest('[data-menu-item]')) return;
+    document.querySelectorAll('.main-nav__item.is-open').forEach(closeMenuItem);
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return;
+    const activeSubmenu = document.activeElement?.closest('[data-menu-submenu]');
+    const openItems = Array.from(document.querySelectorAll('.main-nav__item.is-open'));
+    const item = activeSubmenu?.closest('[data-menu-item]') || openItems.at(-1);
+    if (!item) return;
+    event.preventDefault();
+    closeMenuItem(item);
+    item.classList.add('is-escape-closed');
+    directToggle(item)?.focus();
+  });
+
   // Category tabs (just visual switch)
   document.querySelectorAll('.tabs').forEach((tablist) => {
     tablist.querySelectorAll('.tab').forEach((tab) => {

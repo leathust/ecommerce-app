@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Dashboard quản lý tiến độ, task, test, migration và quyết định của Ecommerce App.">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Project Command Center | Ecommerce App</title>
+  <link rel="stylesheet" href="assets/pm-board/pm-board.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Đi đến nội dung chính</a>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Điều hướng dashboard">
+      <div class="brand-block">
+        <div class="brand-mark" aria-hidden="true">EC</div>
+        <div><strong>Ecommerce App</strong><span>Project Command Center</span></div>
+      </div>
+      <nav class="nav-list" aria-label="Các khu vực">
+        <button class="nav-item active" data-view="board" type="button"><span aria-hidden="true">▦</span>Board</button>
+        <button class="nav-item" data-view="roadmap" type="button"><span aria-hidden="true">⌁</span>Roadmap</button>
+        <button class="nav-item" data-view="tests" type="button"><span aria-hidden="true">✓</span>Test Center</button>
+        <button class="nav-item" data-view="activity" type="button"><span aria-hidden="true">◷</span>Activity</button>
+        <button class="nav-item" data-view="governance" type="button"><span aria-hidden="true">◇</span>Risks & Decisions</button>
+      </nav>
+      <div class="sidebar-summary">
+        <span>Tiến độ tổng thể</span>
+        <strong id="sidebar-progress-label">0%</strong>
+        <div class="progress-track"><span id="sidebar-progress-bar"></span></div>
+        <small id="sidebar-task-summary">Đang tải dữ liệu…</small>
+      </div>
+      <div class="sidebar-footer"><span class="status-dot"></span><span>Local documentation</span></div>
+    </aside>
+
+    <div class="workspace">
+      <header class="topbar">
+        <button class="icon-button mobile-menu" id="mobile-menu" type="button" aria-label="Mở menu" aria-expanded="false">☰</button>
+        <div class="topbar-title"><p>PM Workspace</p><h1 id="view-title">Delivery board</h1></div>
+        <div class="topbar-actions">
+          <label class="global-search"><span aria-hidden="true">⌕</span><span class="sr-only">Tìm kiếm task</span><input id="global-search" type="search" placeholder="Tìm task, module, file…" autocomplete="off"></label>
+          <button class="icon-button" id="theme-toggle" type="button" aria-label="Chuyển giao diện sáng tối">◐</button>
+          <button class="print-button" id="print-report" type="button">In báo cáo</button>
+        </div>
+      </header>
+
+      <main id="main-content" tabindex="-1">
+        <section class="hero" aria-labelledby="hero-heading">
+          <div><span class="eyebrow">Laravel 10 · PHP 8.2 · MySQL</span><h2 id="hero-heading">Từ backlog đến production-ready</h2><p>Theo dõi delivery, chất lượng, thay đổi database và quyết định nghiệp vụ trong một màn hình.</p></div>
+          <div class="release-chip"><span>Current milestone</span><strong>Giai đoạn 3</strong><small>Customer insights</small></div>
+        </section>
+
+        <section class="kpi-grid" aria-label="Chỉ số dự án">
+          <article class="kpi-card accent-blue"><span class="kpi-icon" aria-hidden="true">↗</span><div><span>Tiến độ</span><strong id="kpi-progress">0%</strong><small id="kpi-progress-note">0/0 task</small></div></article>
+          <article class="kpi-card accent-green"><span class="kpi-icon" aria-hidden="true">✓</span><div><span>Test suite</span><strong>166 passed</strong><small>1325 assertions</small></div></article>
+          <article class="kpi-card accent-purple"><span class="kpi-icon" aria-hidden="true">▤</span><div><span>Migrations</span><strong>20 ran</strong><small>0 pending</small></div></article>
+          <article class="kpi-card accent-orange"><span class="kpi-icon" aria-hidden="true">!</span><div><span>Open risks</span><strong id="kpi-risks">0</strong><small id="kpi-risk-note">Đang theo dõi</small></div></article>
+        </section>
+
+        <section class="view active" id="view-board" data-view-panel="board" aria-labelledby="board-title">
+          <div class="section-heading"><div><span class="eyebrow">Execution</span><h2 id="board-title">Delivery board</h2><p>Toàn bộ công việc nền tảng, khách hàng và đơn hàng.</p></div><div class="filter-bar"><select id="module-filter" aria-label="Lọc module"><option value="all">Tất cả module</option></select><select id="priority-filter" aria-label="Lọc độ ưu tiên"><option value="all">Mọi ưu tiên</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select><button id="clear-filters" type="button">Xóa lọc</button></div></div>
+          <div class="active-filter" id="active-filter" hidden></div>
+          <div class="board" id="trello-board" aria-live="polite"></div>
+        </section>
+
+        <section class="view" id="view-roadmap" data-view-panel="roadmap" aria-labelledby="roadmap-title">
+          <div class="section-heading"><div><span class="eyebrow">Strategy</span><h2 id="roadmap-title">Delivery roadmap</h2><p>Các giai đoạn, dependency và kết quả cần đạt.</p></div></div>
+          <div class="roadmap-layout"><div id="phase-list" class="phase-list"></div><aside class="next-action"><span class="eyebrow">Milestone completed</span><h3>Roadmap IAM đã hoàn thành</h3><p>Toàn bộ Task 4.1–4.12, bao gồm cải tiến UX role và permission matrix, đã qua quality gate.</p><div class="next-meta"><span>IAM: 12/12 done</span><span>Regression: Green</span></div></aside></div>
+        </section>
+
+        <section class="view" id="view-tests" data-view-panel="tests" aria-labelledby="tests-title">
+          <div class="section-heading"><div><span class="eyebrow">Quality gate</span><h2 id="tests-title">Test Center</h2><p>Phạm vi kiểm thử, migration và trạng thái chất lượng gần nhất.</p></div><span class="quality-badge">All systems green</span></div>
+          <div class="test-hero"><div class="test-score"><strong>166</strong><span>tests passed</span></div><div class="test-metrics"><div><span>Assertions</span><strong>1325</strong></div><div><span>Failures</span><strong>0</strong></div><div><span>Last run</span><strong>05/11/2026</strong></div></div></div>
+          <div class="content-grid"><section class="panel"><div class="panel-header"><div><h3>Coverage by module</h3><p>Feature suites đang bảo vệ các luồng quan trọng.</p></div></div><div class="test-table-wrap"><table><thead><tr><th>Module</th><th>Test files</th><th>Cases</th><th>Status</th></tr></thead><tbody id="test-module-rows"></tbody></table></div></section><section class="panel"><div class="panel-header"><div><h3>Database migrations</h3><p>Trạng thái schema hiện tại.</p></div><span class="pill success">20 / 20 ran</span></div><div id="migration-list" class="migration-list"></div></section></div>
+        </section>
+
+        <section class="view" id="view-activity" data-view-panel="activity" aria-labelledby="activity-title">
+          <div class="section-heading"><div><span class="eyebrow">Delivery log</span><h2 id="activity-title">Activity timeline</h2><p>Các mốc code, test, database và tài liệu quan trọng.</p></div><select id="activity-filter" aria-label="Lọc hoạt động"><option value="all">Tất cả hoạt động</option><option value="task">Task</option><option value="test">Test</option><option value="database">Database</option><option value="docs">Documentation</option></select></div>
+          <div id="activity-timeline" class="timeline"></div>
+        </section>
+
+        <section class="view" id="view-governance" data-view-panel="governance" aria-labelledby="governance-title">
+          <div class="section-heading"><div><span class="eyebrow">Governance</span><h2 id="governance-title">Risks & decisions</h2><p>Các rủi ro mở, technical debt và quyết định kiến trúc cần được bảo toàn.</p></div></div>
+          <div class="content-grid governance-grid"><section class="panel"><div class="panel-header"><div><h3>Open risks & debt</h3><p>Sắp xếp theo mức độ ảnh hưởng.</p></div></div><div id="risk-list" class="risk-list"></div></section><section class="panel"><div class="panel-header"><div><h3>Decision log</h3><p>Lý do đằng sau các lựa chọn quan trọng.</p></div></div><div id="decision-list" class="decision-list"></div></section></div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="task-modal" hidden>
+    <section class="task-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <header><div><span class="eyebrow" id="modal-task-id"></span><h2 id="modal-title"></h2></div><button class="icon-button" id="modal-close" type="button" aria-label="Đóng chi tiết">×</button></header>
+      <div class="modal-meta" id="modal-meta"></div>
+      <div class="modal-body"><section><h3>Mục tiêu & kết quả</h3><p id="modal-description"></p></section><section><h3>Checklist</h3><ul class="check-list" id="modal-checklist"></ul></section><section><h3>Files chính</h3><ul class="file-list" id="modal-files"></ul></section><section><h3>Kiểm thử</h3><div class="modal-test" id="modal-test"></div></section><section><h3>Quyết định nghiệp vụ</h3><ul class="decision-points" id="modal-decisions"></ul></section></div>
+    </section>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="assets/pm-board/pm-board.js"></script>
+</body>
+</html>

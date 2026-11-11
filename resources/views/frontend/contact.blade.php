@@ -1,5 +1,8 @@
 @extends('frontend.layout')
 
+@section('title', 'Liên hệ | '.$storefrontSettings['name'])
+@section('meta_description', 'Gửi yêu cầu hỗ trợ và liên hệ với '.$storefrontSettings['name'].'.')
+
 @section('content')
   <main id="main">
     <section class="page-head">
@@ -14,22 +17,30 @@
       <div class="container">
         <div class="contact-grid">
           <div class="contact-info">
+            @if($storefrontSettings['contact']['email'])
             <div class="info-block">
               <div class="ic">✉</div>
-              <div><div class="label">EMAIL</div><div class="value"><a href="mailto:support@sprylo.example">support@sprylo.example</a></div></div>
+              <div><div class="label">EMAIL</div><div class="value"><a href="mailto:{{ $storefrontSettings['contact']['email'] }}">{{ $storefrontSettings['contact']['email'] }}</a></div></div>
             </div>
+            @endif
+            @if($storefrontSettings['contact']['phone'])
             <div class="info-block">
               <div class="ic">☎</div>
-              <div><div class="label">ĐIỆN THOẠI · 24/7</div><div class="value"><a href="tel:+18005551234">+1 (800) 555-1234</a></div></div>
+              <div><div class="label">ĐIỆN THOẠI</div><div class="value"><a href="tel:{{ preg_replace('/[^0-9+]/', '', $storefrontSettings['contact']['phone']) }}">{{ $storefrontSettings['contact']['phone'] }}</a></div></div>
             </div>
+            @endif
+            @if($storefrontSettings['contact']['address'])
             <div class="info-block">
               <div class="ic">⌖</div>
-              <div><div class="label">ĐỊA CHỈ</div><div class="value">214 Market Street<br>San Francisco, CA 94103</div></div>
+              <div><div class="label">ĐỊA CHỈ</div><div class="value" style="white-space:pre-line">{{ $storefrontSettings['contact']['address'] }}</div></div>
             </div>
+            @endif
+            @if($storefrontSettings['contact']['working_hours'])
             <div class="info-block">
               <div class="ic">◷</div>
-              <div><div class="label">GIỜ HỖ TRỢ</div><div class="value">Thứ Hai – Thứ Sáu · 06:00 – 22:00<br>Thứ Bảy – Chủ Nhật · 08:00 – 18:00</div></div>
+              <div><div class="label">GIỜ HỖ TRỢ</div><div class="value" style="white-space:pre-line">{{ $storefrontSettings['contact']['working_hours'] }}</div></div>
             </div>
+            @endif
           </div>
 
           <form id="contact-form" class="contact-form" action="{{ route('contact.store') }}" method="POST">

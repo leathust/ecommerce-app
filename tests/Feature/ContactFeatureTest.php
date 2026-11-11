@@ -3,10 +3,13 @@
 namespace Tests\Feature;
 
 use App\Mail\ContactReplyMail;
+use App\Mail\ContactSubmissionMail;
 use App\Models\Contact;
 use App\Models\Permission;
 use App\Models\Role;
+use App\Models\Setting;
 use App\Models\User;
+use App\Services\SystemSettingService;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
@@ -45,6 +48,29 @@ class ContactFeatureTest extends TestCase
             'order_code' => 'SPR-204418',
             'status' => 'new',
         ]);
+    }
+
+    public function test_contact_recipient_gets_internal_notification_with_configured_sender_name(): void
+    {
+        Mail::fake();
+        Setting::query()->insert([
+            ['setting_key' => 'mail.from_name', 'setting_value' => 'Đội ngũ hỗ trợ', 'updated_by' => null],
+            ['setting_key' => 'mail.contact_recipient', 'setting_value' => 'support-team@example.com', 'updated_by' => null],
+        ]);
+        app(SystemSettingService::class)->forgetCache();
+
+        $this->post(route('contact.store'), $this->validPayload())
+            ->assertRedirect(route('contact'))
+            ->assertSessionHas('success');
+
+        $contact = Contact::sole();
+        Mail::assertSent(ContactSubmissionMail::class, fn (ContactSubmissionMail $mail): bool =>
+            $mail->hasTo('support-team@example.com')
+            && $mail->hasFrom((string) config('mail.from.address'), 'Đội ngũ hỗ trợ')
+            && $mail->senderName === 'Đội ngũ hỗ trợ'
+            && $mail->contact->is($contact)
+        );
+        Mail::assertNotSent(ContactReplyMail::class);
     }
 
     public function test_contact_validation_and_honeypot_reject_invalid_submissions(): void
@@ -199,6 +225,11 @@ class ContactFeatureTest extends TestCase
     public function test_support_can_reply_to_contact_email_from_database(): void
     {
         Mail::fake();
+        Setting::query()->create([
+            'setting_key' => 'mail.from_name',
+            'setting_value' => 'CSKH Ecommerce',
+        ]);
+        app(SystemSettingService::class)->forgetCache();
         $contact = Contact::create($this->contactAttributes());
         $user = $this->userWithRole('customer_support');
 
@@ -212,6 +243,8 @@ class ContactFeatureTest extends TestCase
         Mail::assertSent(ContactReplyMail::class, fn ($mail) => $mail->hasTo($contact->email)
             && $mail->replySubject === 'Support reply'
             && $mail->replyMessage === 'We have received your request.'
+            && $mail->senderName === 'CSKH Ecommerce'
+            && $mail->hasFrom((string) config('mail.from.address'), 'CSKH Ecommerce')
         );
     }
 

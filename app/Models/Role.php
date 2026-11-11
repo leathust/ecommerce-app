@@ -18,9 +18,16 @@ class Role extends Model
         'customer_support',
     ];
 
+    public const RESERVED_NAMES = self::ADMIN_ROLES;
+
     public $timestamps = false;
 
-    protected $fillable = ['name', 'description'];
+    protected $fillable = ['name', 'description', 'is_admin', 'is_system'];
+
+    protected $casts = [
+        'is_admin' => 'boolean',
+        'is_system' => 'boolean',
+    ];
 
     public function users(): BelongsToMany
     {
@@ -36,6 +43,16 @@ class Role extends Model
     {
         return $this->name === self::SUPER_ADMIN
             || $this->permissions()->where('permissions.name', $permission)->exists();
+    }
+
+    public function isProtectedSuperAdminRole(): bool
+    {
+        return $this->name === self::SUPER_ADMIN;
+    }
+
+    public function isReservedSystemRole(): bool
+    {
+        return in_array($this->name, self::RESERVED_NAMES, true);
     }
 
     public function scopeWithPermission(Builder $query, string $permission): Builder

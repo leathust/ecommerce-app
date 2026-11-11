@@ -1304,10 +1304,12 @@ function initSidebarToggle() {
     if (e.key === 'Escape' && hasClass(body, 'sidebar-open')) closeMobile();
   });
 
-  // Tapping a nav link on mobile should close the drawer.
+  // Close the mobile drawer only after choosing a real navigation link.
+  // Dropdown toggles use href="#" and must keep the drawer open so the user
+  // can select one of their child links.
   $$('.menu-sidebar .navbar__list a, .menu-sidebar .navbar__sub-list a').forEach((link) => {
     on(link, 'click', () => {
-      if (isMobile()) closeMobile();
+      if (isMobile() && !hasClass(link, 'js-arrow')) closeMobile();
     });
   });
 
@@ -1406,12 +1408,18 @@ function initRightSidebar() {
 // Expand/collapse arrows in nav sub-lists.
 function initSubListArrows() {
   $$('.js-arrow').forEach((arrow) => {
+    const initialSubList = find(arrow.parentNode, '.js-sub-list');
+    if (hasClass(arrow, 'open') && initialSubList) {
+      initialSubList.style.display = 'block';
+    }
+
     on(arrow, 'click', function (e) {
       e.preventDefault();
       const arrowIcon = find(this, '.arrow');
       const subList = find(this.parentNode, '.js-sub-list');
       if (arrowIcon) toggleClass(arrowIcon, 'up');
       toggleClass(this, 'open');
+      this.setAttribute('aria-expanded', hasClass(this, 'open') ? 'true' : 'false');
       if (subList) slideToggle(subList, 250);
     });
   });

@@ -14,6 +14,7 @@ class RolePermissionSeeder extends Seeder
      */
     public function run(): void
     {
+        $menuPermissionNames = ['menus.view', 'menus.create', 'menus.update', 'menus.delete'];
         $permissions = [
             'dashboard.view' => 'Xem trang tổng quan quản trị',
             'products.view' => 'Xem sản phẩm',
@@ -42,8 +43,13 @@ class RolePermissionSeeder extends Seeder
             'roles.view' => 'Xem vai trò',
             'roles.manage' => 'Quản lý vai trò',
             'permissions.manage' => 'Quản lý quyền',
+            'audit.view' => 'Xem lịch sử thay đổi quản trị',
             'settings.view' => 'Xem cấu hình',
             'settings.update' => 'Cập nhật cấu hình',
+            'menus.view' => 'Xem menu website',
+            'menus.create' => 'Tạo menu website',
+            'menus.update' => 'Cập nhật và sắp xếp menu website',
+            'menus.delete' => 'Xóa menu website',
         ];
 
         $roles = [
@@ -53,7 +59,19 @@ class RolePermissionSeeder extends Seeder
             ],
             'admin' => [
                 'description' => 'Quản trị viên hệ thống',
-                'permissions' => array_keys($permissions),
+                'permissions' => [
+                    'dashboard.view',
+                    'products.view', 'products.create', 'products.update', 'products.delete',
+                    'categories.view', 'categories.create', 'categories.update', 'categories.delete',
+                    'brands.view', 'brands.create', 'brands.update', 'brands.delete',
+                    'orders.view', 'orders.update', 'orders.cancel',
+                    'customers.view', 'customers.update',
+                    'contacts.view', 'contacts.update',
+                    'users.view', 'users.create', 'users.update', 'users.delete',
+                    'roles.view', 'audit.view',
+                    'settings.view', 'settings.update',
+                    'menus.view', 'menus.create', 'menus.update', 'menus.delete',
+                ],
             ],
             'catalog_manager' => [
                 'description' => 'Quản lý sản phẩm, danh mục và thương hiệu',
@@ -62,6 +80,7 @@ class RolePermissionSeeder extends Seeder
                     'products.view', 'products.create', 'products.update', 'products.delete',
                     'categories.view', 'categories.create', 'categories.update', 'categories.delete',
                     'brands.view', 'brands.create', 'brands.update', 'brands.delete',
+                    'menus.view', 'menus.create', 'menus.update', 'menus.delete',
                 ],
             ],
             'order_manager' => [
@@ -83,7 +102,7 @@ class RolePermissionSeeder extends Seeder
             ],
         ];
 
-        DB::transaction(function () use ($permissions, $roles): void {
+        DB::transaction(function () use ($permissions, $roles, $menuPermissionNames): void {
             $permissionModels = collect($permissions)->mapWithKeys(
                 fn (string $description, string $name) => [
                     $name => Permission::updateOrCreate(
@@ -96,12 +115,30 @@ class RolePermissionSeeder extends Seeder
             foreach ($roles as $name => $definition) {
                 $role = Role::updateOrCreate(
                     ['name' => $name],
-                    ['description' => $definition['description']],
+                    [
+                        'description' => $definition['description'],
+                        'is_admin' => true,
+                        'is_system' => true,
+                    ],
                 );
 
-                $role->permissions()->sync(
-                    $permissionModels->only($definition['permissions'])->pluck('id')->all(),
-                );
+                if ($role->wasRecentlyCreated) {
+                    $role->permissions()->sync(
+                        $permissionModels->only($definition['permissions'])->pluck('id')->all(),
+                    );
+                } else {
+                    $menuPermissions = array_values(array_intersect($definition['permissions'], $menuPermissionNames));
+                    $previousDefaults = array_values(array_diff($definition['permissions'], $menuPermissionNames));
+                    $currentPermissions = $role->permissions()->pluck('name')->sort()->values()->all();
+                    sort($previousDefaults);
+                    $alreadyHasMenuPermissions = array_intersect($currentPermissions, $menuPermissionNames) !== [];
+
+                    if (! $alreadyHasMenuPermissions && $currentPermissions === $previousDefaults) {
+                        $role->permissions()->syncWithoutDetaching(
+                            $permissionModels->only($menuPermissions)->pluck('id')->all(),
+                        );
+                    }
+                }
             }
         });
     }

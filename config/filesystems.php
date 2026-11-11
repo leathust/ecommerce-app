@@ -30,6 +30,18 @@ return [
 
     'disks' => [
 
+        'catalog_images' => [
+            'driver' => 'local',
+            'root' => storage_path('app/catalog-images'),
+            'throw' => true,
+        ],
+
+        'product_images' => [
+            'driver' => 'local',
+            'root' => storage_path('app/product-images'),
+            'throw' => true,
+        ],
+
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app'),

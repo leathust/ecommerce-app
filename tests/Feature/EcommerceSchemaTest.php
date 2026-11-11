@@ -16,7 +16,7 @@ class EcommerceSchemaTest extends TestCase
         $tables = [
             'users', 'roles', 'permissions', 'user_roles', 'role_permissions',
             'categories', 'brands', 'products', 'product_images', 'carts',
-            'cart_items', 'wishlists', 'orders', 'order_items', 'contacts',
+            'cart_items', 'wishlists', 'orders', 'order_items', 'order_status_histories', 'contacts',
             'faqs', 'menus', 'settings',
         ];
 
@@ -29,6 +29,7 @@ class EcommerceSchemaTest extends TestCase
             'phone', 'status', 'created_at', 'updated_at',
         ]));
         $this->assertTrue(Schema::hasColumn('contacts', 'order_code'));
+        $this->assertTrue(Schema::hasColumns('orders', ['cancel_reason', 'confirmed_at', 'processing_at', 'shipped_at', 'delivered_at', 'cancelled_at', 'stock_deducted_at', 'stock_restored_at']));
 
         $user = User::factory()->create();
 

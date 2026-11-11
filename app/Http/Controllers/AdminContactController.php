@@ -7,6 +7,7 @@ use App\Http\Requests\ReplyContactRequest;
 use App\Http\Requests\UpdateContactStatusRequest;
 use App\Mail\ContactReplyMail;
 use App\Models\Contact;
+use App\Support\SystemMailMetadata;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
@@ -42,7 +43,11 @@ class AdminContactController extends Controller
         return back()->with('success', 'Đã cập nhật trạng thái liên hệ.');
     }
 
-    public function reply(ReplyContactRequest $request, Contact $contact): RedirectResponse
+    public function reply(
+        ReplyContactRequest $request,
+        Contact $contact,
+        SystemMailMetadata $mailMetadata,
+    ): RedirectResponse
     {
         if (! filter_var($contact->email, FILTER_VALIDATE_EMAIL)) {
             throw ValidationException::withMessages(['reply_message' => 'Liên hệ này không có email hợp lệ.']);
@@ -55,6 +60,7 @@ class AdminContactController extends Controller
                 $contact->full_name,
                 $data['subject'],
                 $data['reply_message'],
+                $mailMetadata->senderName(),
             ));
         } catch (TransportExceptionInterface $exception) {
             report($exception);

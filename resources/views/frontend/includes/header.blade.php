@@ -2,8 +2,12 @@
   <header class="site-header">
     <div class="container">
       <a href="{{ Route('home') }}" class="brand">
-        <span class="brand-mark">S</span>
-        Sprylo
+        @if($storefrontSettings['logo_url'])
+          <img src="{{ $storefrontSettings['logo_url'] }}" alt="{{ $storefrontSettings['name'] }}" style="max-width:180px;max-height:48px;object-fit:contain">
+        @else
+          <span class="brand-mark">{{ $storefrontSettings['initial'] }}</span>
+          {{ $storefrontSettings['name'] }}
+        @endif
       </a>
 
       <form class="search" role="search" onsubmit="event.preventDefault();">

@@ -1,0 +1,100 @@
+<?php
+
+$entry = static fn (
+    string $key,
+    string $group,
+    string $label,
+    string $description,
+    string $type,
+    mixed $default,
+    array $rules,
+    bool $public,
+    string $runtimeStatus,
+    array $consumer,
+    string $emptyBehavior = 'fallback',
+    array $options = [],
+    ?array $upload = null,
+): array => [
+    'key' => $key,
+    'group' => $group,
+    'label' => $label,
+    'description' => $description,
+    'type' => $type,
+    'default' => $default,
+    'rules' => $rules,
+    'public' => $public,
+    'runtime_status' => $runtimeStatus,
+    'consumer' => $consumer,
+    'empty_behavior' => $emptyBehavior,
+    'options' => $options,
+    'upload' => $upload,
+];
+
+return [
+    'cache_key' => 'system_settings.typed_values.v1',
+
+    'groups' => [
+        'site' => ['label' => 'Website & thương hiệu', 'icon' => 'fa-solid fa-palette', 'description' => 'Tên, nhận diện và tùy chọn hiển thị chung.'],
+        'contact' => ['label' => 'Liên hệ', 'icon' => 'fa-solid fa-address-book', 'description' => 'Thông tin hỗ trợ công khai trên website.'],
+        'business' => ['label' => 'Doanh nghiệp & hóa đơn', 'icon' => 'fa-solid fa-building', 'description' => 'Thông tin pháp lý và nội dung bản in hóa đơn.'],
+        'commerce' => ['label' => 'Bán hàng', 'icon' => 'fa-solid fa-cart-shopping', 'description' => 'Tiền tệ, vận chuyển và ngưỡng vận hành.'],
+        'payment' => ['label' => 'Thanh toán', 'icon' => 'fa-solid fa-credit-card', 'description' => 'Phương thức và thông tin nhận chuyển khoản công khai.'],
+        'mail' => ['label' => 'Email', 'icon' => 'fa-solid fa-envelope', 'description' => 'Metadata email không nhạy cảm; SMTP vẫn do môi trường quản lý.'],
+        'seo' => ['label' => 'SEO', 'icon' => 'fa-solid fa-magnifying-glass', 'description' => 'Metadata mặc định và quyền cho phép indexing.'],
+        'social' => ['label' => 'Mạng xã hội', 'icon' => 'fa-solid fa-share-nodes', 'description' => 'Liên kết mạng xã hội công khai.'],
+    ],
+
+    'settings' => [
+        'site.name_vi' => $entry('site.name_vi', 'site', 'Tên website (VI)', 'Tên thương hiệu hiển thị bằng tiếng Việt.', 'string', env('APP_NAME', 'Ecommerce App'), ['nullable', 'string', 'max:120'], true, 'active_consumer', ['frontend layout/header/footer', 'admin/auth fallback']),
+        'site.name_en' => $entry('site.name_en', 'site', 'Tên website (EN)', 'Tên thương hiệu hiển thị bằng tiếng Anh.', 'string', env('APP_NAME', 'Ecommerce App'), ['nullable', 'string', 'max:120'], true, 'active_consumer', ['frontend layout/header/footer']),
+        'site.tagline_vi' => $entry('site.tagline_vi', 'site', 'Slogan (VI)', 'Slogan ngắn bằng tiếng Việt.', 'string', '', ['nullable', 'string', 'max:255'], true, 'active_consumer', ['frontend footer'], 'hide'),
+        'site.tagline_en' => $entry('site.tagline_en', 'site', 'Slogan (EN)', 'Slogan ngắn bằng tiếng Anh.', 'string', '', ['nullable', 'string', 'max:255'], true, 'active_consumer', ['frontend footer'], 'hide'),
+        'site.logo' => $entry('site.logo', 'site', 'Logo', 'Đường dẫn logo thuộc storage do module quản lý.', 'image', null, ['nullable', 'string', 'max:1024'], true, 'active_consumer', ['frontend header/footer', 'invoice'], 'fallback', [], ['directory' => 'system-settings/logo', 'rules' => ['required', 'file', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048', 'dimensions:max_width=4000,max_height=4000'], 'accept' => '.png,.jpg,.jpeg,.webp']),
+        'site.favicon' => $entry('site.favicon', 'site', 'Favicon', 'Đường dẫn favicon thuộc storage do module quản lý.', 'image', null, ['nullable', 'string', 'max:1024'], true, 'active_consumer', ['frontend layout'], 'fallback', [], ['directory' => 'system-settings/favicon', 'rules' => ['required', 'file', 'mimes:png,ico', 'max:512'], 'accept' => '.png,.ico']),
+        'site.default_locale' => $entry('site.default_locale', 'site', 'Ngôn ngữ mặc định', 'Chỉ có hiệu lực đầy đủ sau khi có locale middleware.', 'enum', 'vi', ['required', 'string', 'in:vi,en'], true, 'planned_consumer', ['future locale middleware'], 'fallback', ['vi' => 'Tiếng Việt', 'en' => 'English']),
+        'site.display_timezone' => $entry('site.display_timezone', 'site', 'Múi giờ hiển thị', 'Chỉ dùng khi format ngày giờ, không thay timezone hạ tầng.', 'enum', 'Asia/Ho_Chi_Minh', ['required', 'string', 'in:Asia/Ho_Chi_Minh,Asia/Bangkok,UTC'], false, 'active_consumer', ['date/time formatter'], 'fallback', ['Asia/Ho_Chi_Minh' => 'Việt Nam (UTC+7)', 'Asia/Bangkok' => 'Bangkok (UTC+7)', 'UTC' => 'UTC']),
+
+        'contact.email' => $entry('contact.email', 'contact', 'Email công khai', 'Email hỗ trợ hiển thị trên website.', 'email', '', ['nullable', 'email:rfc', 'max:255'], true, 'active_consumer', ['frontend contact/footer'], 'hide'),
+        'contact.phone' => $entry('contact.phone', 'contact', 'Hotline', 'Số điện thoại hỗ trợ công khai.', 'string', '', ['nullable', 'string', 'max:30', 'regex:/^[0-9+().\-\s]*$/'], true, 'active_consumer', ['frontend contact/footer'], 'hide'),
+        'contact.address_vi' => $entry('contact.address_vi', 'contact', 'Địa chỉ (VI)', 'Địa chỉ liên hệ bằng tiếng Việt.', 'textarea', '', ['nullable', 'string', 'max:1000'], true, 'active_consumer', ['frontend contact', 'invoice'], 'hide'),
+        'contact.address_en' => $entry('contact.address_en', 'contact', 'Địa chỉ (EN)', 'Địa chỉ liên hệ bằng tiếng Anh.', 'textarea', '', ['nullable', 'string', 'max:1000'], true, 'active_consumer', ['frontend contact'], 'hide'),
+        'contact.working_hours_vi' => $entry('contact.working_hours_vi', 'contact', 'Giờ làm việc (VI)', 'Thời gian hỗ trợ bằng tiếng Việt.', 'string', '', ['nullable', 'string', 'max:255'], true, 'active_consumer', ['frontend contact'], 'hide'),
+        'contact.working_hours_en' => $entry('contact.working_hours_en', 'contact', 'Giờ làm việc (EN)', 'Thời gian hỗ trợ bằng tiếng Anh.', 'string', '', ['nullable', 'string', 'max:255'], true, 'active_consumer', ['frontend contact'], 'hide'),
+
+        'business.legal_name' => $entry('business.legal_name', 'business', 'Tên pháp lý', 'Tên tổ chức hoặc hộ kinh doanh trên hóa đơn.', 'string', '', ['nullable', 'string', 'max:255'], true, 'active_consumer', ['invoice'], 'fallback'),
+        'business.tax_code' => $entry('business.tax_code', 'business', 'Mã số thuế', 'Mã số thuế lưu dạng chuỗi để giữ số 0 đầu.', 'string', '', ['nullable', 'string', 'max:50', 'regex:/^[A-Za-z0-9.\-]*$/'], true, 'active_consumer', ['invoice'], 'hide'),
+        'business.invoice_footer_vi' => $entry('business.invoice_footer_vi', 'business', 'Cuối hóa đơn (VI)', 'Lời cảm ơn hoặc ghi chú cuối hóa đơn tiếng Việt.', 'textarea', 'Cảm ơn quý khách đã mua hàng.', ['nullable', 'string', 'max:1000'], true, 'active_consumer', ['invoice']),
+        'business.invoice_footer_en' => $entry('business.invoice_footer_en', 'business', 'Cuối hóa đơn (EN)', 'Lời cảm ơn hoặc ghi chú cuối hóa đơn tiếng Anh.', 'textarea', 'Thank you for your purchase.', ['nullable', 'string', 'max:1000'], true, 'active_consumer', ['invoice']),
+
+        'commerce.currency' => $entry('commerce.currency', 'commerce', 'Tiền tệ', 'Đồng tiền nghiệp vụ; giai đoạn đầu chỉ hỗ trợ VND.', 'enum', 'VND', ['required', 'string', 'in:VND'], true, 'active_consumer', ['money formatter'], 'fallback', ['VND' => 'Việt Nam đồng']),
+        'commerce.currency_symbol' => $entry('commerce.currency_symbol', 'commerce', 'Ký hiệu tiền', 'Ký hiệu hiển thị cạnh giá.', 'string', '₫', ['required', 'string', 'max:10'], true, 'active_consumer', ['money formatter']),
+        'commerce.default_shipping_fee' => $entry('commerce.default_shipping_fee', 'commerce', 'Phí giao hàng mặc định', 'Chỉ áp dụng khi checkout được triển khai.', 'decimal', '0.00', ['required', 'numeric', 'min:0', 'max:9999999999999999.99', 'decimal:0,2'], false, 'planned_consumer', ['future checkout']),
+        'commerce.free_shipping_threshold' => $entry('commerce.free_shipping_threshold', 'commerce', 'Ngưỡng miễn phí vận chuyển', 'Giá trị 0 nghĩa là tắt.', 'decimal', '0.00', ['required', 'numeric', 'min:0', 'max:9999999999999999.99', 'decimal:0,2'], false, 'planned_consumer', ['future checkout']),
+        'commerce.minimum_order_amount' => $entry('commerce.minimum_order_amount', 'commerce', 'Giá trị đơn tối thiểu', 'Giá trị 0 nghĩa là không giới hạn.', 'decimal', '0.00', ['required', 'numeric', 'min:0', 'max:9999999999999999.99', 'decimal:0,2'], false, 'planned_consumer', ['future checkout']),
+        'commerce.low_stock_threshold' => $entry('commerce.low_stock_threshold', 'commerce', 'Ngưỡng tồn kho thấp', 'Ngưỡng cảnh báo tồn kho cho catalog admin tương lai.', 'int', 5, ['required', 'integer', 'min:0', 'max:1000000'], false, 'planned_consumer', ['future catalog stock warning']),
+
+        'payment.cod_enabled' => $entry('payment.cod_enabled', 'payment', 'Cho phép COD', 'Bật thanh toán khi nhận hàng ở checkout tương lai.', 'bool', true, ['required', 'boolean'], false, 'planned_consumer', ['future checkout']),
+        'payment.bank_transfer_enabled' => $entry('payment.bank_transfer_enabled', 'payment', 'Cho phép chuyển khoản', 'Bật hướng dẫn chuyển khoản ở checkout tương lai.', 'bool', true, ['required', 'boolean'], false, 'planned_consumer', ['future checkout']),
+        'payment.card_enabled' => $entry('payment.card_enabled', 'payment', 'Cho phép thẻ', 'Chỉ bật sau khi có gateway và webhook.', 'bool', false, ['required', 'boolean'], false, 'planned_consumer', ['future payment gateway']),
+        'payment.e_wallet_enabled' => $entry('payment.e_wallet_enabled', 'payment', 'Cho phép ví điện tử', 'Chỉ bật sau khi có gateway và webhook.', 'bool', false, ['required', 'boolean'], false, 'planned_consumer', ['future payment gateway']),
+        'payment.bank_name' => $entry('payment.bank_name', 'payment', 'Tên ngân hàng', 'Thông tin công khai, không phải credential.', 'string', '', ['nullable', 'string', 'max:150'], false, 'planned_consumer', ['future bank transfer instructions'], 'hide'),
+        'payment.bank_account_name' => $entry('payment.bank_account_name', 'payment', 'Tên chủ tài khoản', 'Tên chủ tài khoản nhận chuyển khoản.', 'string', '', ['nullable', 'string', 'max:150'], false, 'planned_consumer', ['future bank transfer instructions'], 'hide'),
+        'payment.bank_account_number' => $entry('payment.bank_account_number', 'payment', 'Số tài khoản', 'Lưu chuỗi để giữ số 0 đầu; không phải secret xác thực.', 'string', '', ['nullable', 'string', 'max:50', 'regex:/^[A-Za-z0-9.\-\s]*$/'], false, 'planned_consumer', ['future bank transfer instructions'], 'hide'),
+
+        'mail.from_name' => $entry('mail.from_name', 'mail', 'Tên người gửi', 'Tên hiển thị trong chữ ký email; transport vẫn từ env.', 'string', env('MAIL_FROM_NAME', env('APP_NAME', 'Ecommerce App')), ['nullable', 'string', 'max:255'], false, 'active_consumer', ['contact reply email']),
+        'mail.contact_recipient' => $entry('mail.contact_recipient', 'mail', 'Email nhận contact', 'Địa chỉ nội bộ nhận thông báo khi khách tạo liên hệ.', 'email', '', ['nullable', 'email:rfc', 'max:255'], false, 'active_consumer', ['contact submission notification'], 'disable'),
+        'mail.contact_auto_reply_enabled' => $entry('mail.contact_auto_reply_enabled', 'mail', 'Tự động xác nhận contact', 'Đang khóa tắt cho đến khi có queue/retry.', 'bool', false, ['required', 'boolean', 'declined'], false, 'planned_consumer', ['future queued contact auto reply']),
+
+        'seo.meta_title_vi' => $entry('seo.meta_title_vi', 'seo', 'Meta title (VI)', 'Tiêu đề SEO mặc định tiếng Việt.', 'string', '', ['nullable', 'string', 'max:70'], true, 'active_consumer', ['frontend layout'], 'fallback'),
+        'seo.meta_title_en' => $entry('seo.meta_title_en', 'seo', 'Meta title (EN)', 'Tiêu đề SEO mặc định tiếng Anh.', 'string', '', ['nullable', 'string', 'max:70'], true, 'active_consumer', ['frontend layout'], 'fallback'),
+        'seo.meta_description_vi' => $entry('seo.meta_description_vi', 'seo', 'Meta description (VI)', 'Mô tả SEO mặc định tiếng Việt.', 'textarea', '', ['nullable', 'string', 'max:170'], true, 'active_consumer', ['frontend layout'], 'hide'),
+        'seo.meta_description_en' => $entry('seo.meta_description_en', 'seo', 'Meta description (EN)', 'Mô tả SEO mặc định tiếng Anh.', 'textarea', '', ['nullable', 'string', 'max:170'], true, 'active_consumer', ['frontend layout'], 'hide'),
+        'seo.og_image' => $entry('seo.og_image', 'seo', 'Ảnh OG mặc định', 'Ảnh chia sẻ mạng xã hội mặc định.', 'image', null, ['nullable', 'string', 'max:1024'], true, 'active_consumer', ['frontend layout'], 'hide', [], ['directory' => 'system-settings/og-image', 'rules' => ['required', 'file', 'image', 'mimes:png,jpg,jpeg,webp', 'max:3072', 'dimensions:min_width=200,min_height=200,max_width=4096,max_height=4096'], 'accept' => '.png,.jpg,.jpeg,.webp']),
+        'seo.indexing_enabled' => $entry('seo.indexing_enabled', 'seo', 'Cho phép indexing', 'Production vẫn phải kiểm tra môi trường trước khi render index.', 'bool', false, ['required', 'boolean'], true, 'active_consumer', ['frontend robots meta']),
+
+        'social.facebook_url' => $entry('social.facebook_url', 'social', 'Facebook', 'URL Facebook công khai.', 'url', '', ['nullable', 'url:http,https', 'max:2048'], true, 'active_consumer', ['frontend footer'], 'hide'),
+        'social.instagram_url' => $entry('social.instagram_url', 'social', 'Instagram', 'URL Instagram công khai.', 'url', '', ['nullable', 'url:http,https', 'max:2048'], true, 'active_consumer', ['frontend footer'], 'hide'),
+        'social.youtube_url' => $entry('social.youtube_url', 'social', 'YouTube', 'URL YouTube công khai.', 'url', '', ['nullable', 'url:http,https', 'max:2048'], true, 'active_consumer', ['frontend footer'], 'hide'),
+        'social.tiktok_url' => $entry('social.tiktok_url', 'social', 'TikTok', 'URL TikTok công khai.', 'url', '', ['nullable', 'url:http,https', 'max:2048'], true, 'active_consumer', ['frontend footer'], 'hide'),
+    ],
+];

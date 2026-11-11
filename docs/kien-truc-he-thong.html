@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ecommerce App — Sổ tay kiến trúc và logic Laravel</title>
+<style>
+:root{--bg:#f3f5fa;--paper:#fff;--ink:#17233b;--muted:#59677e;--line:#dde3ee;--blue:#3159d9;--soft:#edf1ff;--green:#11775d;--amber:#956000}*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.75 system-ui,-apple-system,"Segoe UI",sans-serif}aside{position:fixed;inset:0 auto 0 0;width:260px;background:#14223d;color:#cdd7ef;padding:28px 20px;overflow:auto}aside strong{display:block;color:white;font-size:20px}aside small{display:block;margin:8px 0 22px}aside a{display:block;padding:7px 10px;border-radius:8px;color:inherit;text-decoration:none;font-size:14px}aside a:hover,aside a.active{background:#2c4068;color:white}main{margin-left:260px;max-width:1400px;padding:42px 5vw 80px}header{background:linear-gradient(120deg,#19305b,#345bd7);color:white;border-radius:22px;padding:38px;margin-bottom:26px}header p{max-width:790px;color:#e0e8ff}h1{font-size:clamp(28px,4vw,43px);line-height:1.2;margin:12px 0 20px}h2{font-size:26px;line-height:1.35;margin:0 0 18px}h3{font-size:19px;margin:25px 0 10px}p{margin:10px 0 16px}section{background:var(--paper);padding:30px;border:1px solid var(--line);border-radius:18px;margin-bottom:24px;scroll-margin-top:24px}.eyebrow{font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase}.tag{display:inline-block;border-radius:20px;padding:3px 11px;background:var(--soft);color:var(--blue);font-size:12px;font-weight:700;margin:3px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}.card{border:1px solid var(--line);border-radius:12px;padding:18px}.card h3{margin:0 0 7px}.flow{display:flex;align-items:stretch;gap:8px;flex-wrap:wrap;padding:14px 0}.node{flex:1;min-width:120px;background:var(--soft);border:1px solid #d5ddfa;border-radius:10px;padding:14px;text-align:center}.node b{display:block;color:var(--blue)}.node small{display:block;font-size:12px}.arrow{align-self:center;color:var(--blue);font-size:23px}.note{border-left:4px solid var(--blue);background:var(--soft);padding:14px 18px;margin:18px 0;border-radius:0 10px 10px 0}.warn{border-color:#d69b26;background:#fff7e8}.ok{border-color:var(--green);background:#eaf8f2}code{font:13px/1.6 Consolas,monospace;background:#edf0f7;border-radius:4px;padding:2px 5px;overflow-wrap:anywhere}pre{background:#14223d;color:#e0eaff;border-radius:12px;padding:20px;overflow:auto;line-height:1.7;font-size:13px}pre code{background:none;padding:0;color:inherit;overflow-wrap:normal}table{width:100%;border-collapse:collapse;font-size:14px;margin:15px 0}th,td{padding:11px 13px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{background:#edf1fa} .table-wrap{overflow:auto}details{border:1px solid var(--line);border-radius:10px;margin:12px 0;padding:14px 18px}summary{cursor:pointer;font-weight:700;color:var(--blue)}button,select,input{font:inherit}button{background:var(--blue);border:0;color:#fff;border-radius:8px;padding:10px 18px;cursor:pointer}button:hover{filter:brightness(.94)}select{border:1px solid var(--line);border-radius:8px;padding:8px;background:white;color:var(--ink);max-width:100%}label{display:block;margin:10px 0}.sim{background:#f7f9ff;border:1px solid var(--line);border-radius:14px;padding:22px}.result{padding:16px;background:white;border-radius:10px;border:1px solid var(--line);margin-top:18px}.steps li{margin-bottom:12px}.muted{color:var(--muted)}.path{font-size:13px;color:var(--green);font-family:Consolas,monospace}.tools{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}.tools button{background:#fff;color:var(--blue)}footer{text-align:center;color:var(--muted);padding:20px}.quiz label{padding:8px 12px;background:#f5f7fc;border-radius:8px}.quiz input{margin-right:10px}.quiz-result{font-weight:700}.status{font-weight:800;font-size:19px}.step-counter{color:var(--blue);font-weight:700}a{color:var(--blue)}@media(max-width:960px){aside{position:static;width:auto;padding:20px}aside nav{display:flex;overflow:auto;gap:8px}aside a{white-space:nowrap}aside small{margin-bottom:12px}main{margin:0;padding:22px 16px}header,section{padding:23px}.arrow{display:none}}@media print{aside,.tools,button{display:none}main{margin:0;padding:0;max-width:none}section{break-inside:avoid;border:0;border-bottom:1px solid #bbb;border-radius:0}header{background:white;color:black;border:1px solid #aaa}header p{color:#333}pre{white-space:pre-wrap;color:black;background:#f1f1f1}body{background:white;font-size:11pt}details{break-inside:avoid}}
+</style>
+</head>
+<body>
+<aside>
+  <strong>Ecommerce App</strong><small>Sổ tay học Laravel · theo code dự án</small>
+  <nav aria-label="Mục lục">
+    <a href="#overview">01 · Bản đồ hệ thống</a><a href="#request">02 · Một request đi đâu?</a><a href="#database">03 · Database & migration</a><a href="#models">04 · Model & Eloquent</a><a href="#seed">05 · Seeder & tài khoản</a><a href="#auth">06 · Đăng nhập & session</a><a href="#rbac">07 · Role, permission, Gate</a><a href="#contact">08 · Khách gửi contact</a><a href="#admin">09 · Admin xử lý contact</a><a href="#email">10 · Modal & email</a><a href="#security">11 · Các lớp bảo vệ</a><a href="#tests">12 · Kiểm thử & debug</a><a href="#extend">13 · Tự thêm module</a><a href="#quiz">14 · Tự kiểm tra kiến thức</a>
+    <a href="#settings-ops">15 · Settings & vận hành</a><a href="#menu-ops">16 · Menu động & backfill</a><a href="#htaccess">17 · Apache & .htaccess</a>
+  </nav>
+</aside>
+<main>
+<header>
+  <div class="eyebrow">Từ giao diện đến database</div>
+  <h1>Hiểu kiến trúc.<br>Đọc được code. Tự mở rộng.</h1>
+  <p>Tài liệu giải thích các chức năng đã xây trong dự án Laravel 10: migrations, models, seeders, đăng nhập quản trị, phân quyền, form liên hệ, danh sách admin và email trả lời. Các đoạn code rút gọn giữ nguyên ý nghĩa của code hiện tại.</p>
+  <span class="tag">Laravel 10</span><span class="tag">Blade + Bootstrap 5</span><span class="tag">MySQL</span><span class="tag">RBAC</span>
+  <div class="tools"><button id="print" type="button">In / lưu PDF</button><button id="expand" type="button">Mở tất cả phần giải thích</button></div>
+</header>
+
+<section id="overview">
+<div class="eyebrow muted">01 · Kiến trúc tổng quan</div><h2>Ứng dụng Laravel chạy phía server</h2>
+<p>Trình duyệt gửi HTTP request. Laravel xử lý nghiệp vụ, đọc/ghi MySQL và trả HTML đã render bằng Blade. JavaScript lo tương tác như mở modal và trạng thái nút; backend vẫn là nơi quyết định có cho phép thao tác hay không.</p>
+<div class="flow"><div class="node"><b>Browser</b><small>Form, cookie, modal</small></div><span class="arrow">→</span><div class="node"><b>Apache</b><small>Rewrite → public/index.php</small></div><span class="arrow">→</span><div class="node"><b>Laravel</b><small>Route → middleware → request → controller</small></div><span class="arrow">↔</span><div class="node"><b>MySQL / SMTP</b><small>Lưu dữ liệu / chuyển email</small></div></div>
+<div class="grid"><div class="card"><h3>Model</h3><p>Dữ liệu, quan hệ, truy vấn và helper. Ví dụ <code>Contact</code>, <code>User</code>, <code>Role</code>.</p></div><div class="card"><h3>View</h3><p>Blade render HTML. Ví dụ form login, bảng contact, nội dung email.</p></div><div class="card"><h3>Controller</h3><p>Điều phối hành động: lấy dữ liệu hợp lệ, gọi model/mail, chọn response.</p></div></div>
+<p class="note">MVC là bộ khung. Dự án còn dùng <b>FormRequest</b> để validate, <b>middleware</b> để chặn request, <b>Gate</b> để kiểm tra quyền và <b>Mailable</b> để đóng gói email. Đây là cách chia trách nhiệm để controller không chứa mọi thứ.</p>
+<div class="table-wrap"><table><thead><tr><th>Lớp</th><th>File/thư mục thực tế</th><th>Câu hỏi nó trả lời</th></tr></thead><tbody>
+<tr><td>Route</td><td><code>routes/web.php</code></td><td>URL và HTTP method gọi action nào?</td></tr><tr><td>Middleware</td><td><code>app/Http/Middleware</code></td><td>Request có được đi tiếp không?</td></tr><tr><td>FormRequest</td><td><code>app/Http/Requests</code></td><td>Dữ liệu và quyền của thao tác có hợp lệ không?</td></tr><tr><td>Controller</td><td><code>app/Http/Controllers</code></td><td>Thực hiện hành động nào và trả gì?</td></tr><tr><td>Model</td><td><code>app/Models</code></td><td>Dữ liệu và quan hệ được truy vấn ra sao?</td></tr><tr><td>View</td><td><code>resources/views</code></td><td>Người dùng nhìn thấy gì?</td></tr><tr><td>Provider/config</td><td><code>app/Providers</code>, <code>config</code></td><td>Đăng ký Gate, limiter và thiết lập dùng chung ở đâu?</td></tr></tbody></table></div>
+<details><summary>Phần nào đã có backend, phần nào còn là template?</summary><p>Authentication, RBAC và Contact đã có xử lý server. Các trang admin sản phẩm/đơn hàng/khách hàng là trang khung; dashboard có dữ liệu minh họa. Chưa có checkout, thanh toán, CRUD thương mại điện tử đầy đủ hoặc lịch sử email reply.</p></details>
+</section>
+
+<section id="request"><div class="eyebrow muted">02 · Vòng đời request</div><h2>Theo dấu GET /admin/contacts</h2>
+<div class="sim"><p class="step-counter" id="trace-count"></p><h3 id="trace-title"></h3><p id="trace-detail"></p><button id="trace-next" type="button">Bước tiếp theo →</button></div>
+<h3>Hai nhánh trả về trình duyệt</h3><div class="grid"><div class="card"><h3>GET → View</h3><p>Controller lấy dữ liệu, <code>return view(...)</code>. Blade chạy trên server để tạo HTML; trình duyệt không nhận code PHP.</p></div><div class="card"><h3>POST/PATCH → Redirect</h3><p>Sau thao tác, controller chuyển hướng về trang GET và đặt flash message. Refresh trang GET không tự gửi lại form POST.</p></div></div>
+<pre><code>Route::get('contacts', [AdminContactController::class, 'index'])
+    ->middleware('permission:contacts.view')
+    ->name('contacts.index');
+
+// Nằm trong prefix('admin')->name('admin.')
+// URL: /admin/contacts
+// route('admin.contacts.index') tạo URL dùng trong Blade.</code></pre>
+<p>Ở XAMPP hiện tại, URL có tiền tố <code>/ecommerce-app</code>. Apache rewrite nội bộ tới <code>public/</code>; CSS/JS có sẵn được phục vụ như file tĩnh, các URL nghiệp vụ đi vào front controller.</p>
+<p class="note warn">URL path và route name là hai khái niệm khác nhau. Đổi path nhưng giữ name giúp các nơi gọi <code>route(...)</code> không phải sửa chuỗi URL thủ công.</p>
+</section>
+
+<section id="database"><div class="eyebrow muted">03 · Database</div><h2>Migration mô tả cấu trúc, seeder tạo dữ liệu</h2>
+<p><code>docs/Ecommerce Diagram.sql</code> là sơ đồ tham khảo. Trong ứng dụng, migration là lịch sử thay đổi schema có thể chạy lại theo thứ tự. Bảng <code>migrations</code> ghi nhận file đã áp dụng.</p>
+<div class="flow"><div class="node"><b>Migration cũ</b><small>Tạo contacts</small></div><span class="arrow">→</span><div class="node"><b>Migration mới</b><small>Thêm order_code nullable</small></div><span class="arrow">→</span><div class="node"><b>Dữ liệu cũ</b><small>Giữ nguyên, order_code = NULL</small></div></div>
+<pre><code>// database/migrations/2026_10_22_000130_...php
+public function up(): void
+{
+    Schema::table('contacts', function (Blueprint $table) {
+        $table->string('order_code', 50)->nullable()->after('reason');
+    });
+}
+// down() dropColumn('order_code') đảo ngược cấu trúc.
+// Rollback cột sẽ mất dữ liệu đã lưu trong cột đó.</code></pre>
+<div class="table-wrap"><table><tr><th>Nhóm</th><th>Bảng</th><th>Ý nghĩa</th></tr><tr><td>Tài khoản & quyền</td><td>users, roles, permissions, user_roles, role_permissions</td><td>Danh tính và quyền thông qua vai trò</td></tr><tr><td>Danh mục hàng hóa</td><td>categories, brands, products, product_images</td><td>Sản phẩm thuộc category, có thể thuộc brand, có nhiều ảnh</td></tr><tr><td>Mua sắm</td><td>carts, cart_items, wishlists</td><td>Giỏ hàng và sản phẩm yêu thích</td></tr><tr><td>Đơn hàng</td><td>orders, order_items</td><td>Order item lưu tên/giá snapshot để giữ lịch sử</td></tr><tr><td>Nội dung & cấu hình</td><td>contacts, faqs, menus, settings</td><td>Liên hệ, nội dung và thiết lập</td></tr></table></div>
+<h3>Ràng buộc database bảo vệ điều gì?</h3><ul><li><b>UNIQUE:</b> không trùng email, SKU hoặc cặp cart_id/product_id.</li><li><b>Foreign key:</b> không tham chiếu ID không tồn tại; kiểu foreignId phù hợp với id unsigned của Laravel.</li><li><b>CASCADE:</b> xóa cha kéo theo con, ví dụ ảnh khi sản phẩm bị xóa.</li><li><b>SET NULL:</b> giữ bản ghi con và bỏ liên kết, ví dụ product_id trong order_items.</li><li><b>RESTRICT:</b> từ chối xóa cha khi còn bản ghi tham chiếu.</li><li><b>decimal(18,2):</b> lưu số tiền chính xác theo hai chữ số thập phân; tránh float cho tiền.</li></ul>
+<pre><code>php artisan migrate:status
+php artisan migrate
+
+# Chỉ chạy migration chưa áp dụng.
+# migrate:fresh xóa bảng để dựng lại: không dùng với dữ liệu cần giữ.</code></pre>
+<p>Bảng users giữ <code>password</code>, <code>remember_token</code>, <code>email_verified_at</code> chuẩn Laravel. <code>password</code> chứa hash, tương ứng ý nghĩa password_hash trong sơ đồ. Không thêm cột mật khẩu thứ hai.</p>
+</section>
+
+<section id="models"><div class="eyebrow muted">04 · Model</div><h2>Eloquent nối object PHP với các bảng</h2>
+<pre><code>public function roles(): BelongsToMany
+{
+    return $this->belongsToMany(Role::class, 'user_roles');
+}
+
+$user->roles;                         // Lấy collection roles (lazy load)
+$user->roles()->where('name', 'admin')->exists(); // Truy vấn tồn tại
+$user->roles()->attach($roleId);       // Thêm liên kết pivot
+$role->permissions()->sync($ids);      // Thay tập liên kết bằng danh sách mới</code></pre>
+<p><code>hasMany</code> diễn tả một user có nhiều orders/carts; <code>belongsTo</code> là chiều ngược lại; <code>belongsToMany</code> cần bảng trung gian. Hai bảng pivot quyền không có model riêng vì quan hệ đã quản lý việc đọc/ghi chúng.</p>
+<details><summary>fillable, hidden, casts và timestamps khác nhau ra sao?</summary><ul><li><code>$fillable</code> liệt kê cột cho phép mass assignment khi gọi create/update bằng array. Nó không thay thế validation hay kiểm tra quyền.</li><li><code>$hidden</code> giấu password/remember_token khi serialize model, không ngăn truy vấn cột.</li><li><code>$casts</code> chuyển đổi boolean, decimal, datetime. Dự án có một hàm <code>casts()</code> trong User: với Laravel 10 cần rà tương thích phiên bản cụ thể; không nên mặc định hàm này bảo đảm hash mật khẩu. Seeder hiện hash rõ ràng bằng <code>Hash::make</code>.</li><li>Model mặc định tự ghi created_at/updated_at. Các bảng không có đủ hai cột dùng <code>$timestamps=false</code> hoặc hằng <code>CREATED_AT/UPDATED_AT=null</code>.</li></ul></details>
+<h3>Scope và accessor trong Contact</h3>
+<pre><code>Contact::query()
+    ->search($filters['q'] ?? null)
+    ->status($filters['status'] ?? null)
+    ->reason($filters['reason'] ?? null)
+    ->latest()
+    ->paginate(15)
+    ->withQueryString();
+
+// scopeStatus() gọi thành ->status()
+// getFullNameAttribute() đọc thành $contact->full_name
+// full_name là giá trị ghép trong PHP, không phải cột mới.</code></pre>
+<p><code>search()</code> gom các điều kiện OR trong một closure: <code>(first_name LIKE ... OR email LIKE ...)</code>. Sau đó AND với status/reason. Nếu không nhóm OR, điều kiện lọc có thể bị sai logic. Query builder bind giá trị giúp tránh SQL injection; ký tự % và _ trong LIKE vẫn có ý nghĩa wildcard.</p>
+<p class="note">Dự án đang dùng truy vấn exists() trực tiếp cho quyền. Dễ hiểu, cập nhật quyền có hiệu lực nhanh nhưng nhiều @can có thể tạo nhiều query. Eager loading hoặc cache quyền là hướng tối ưu sau; khi cache cần có cơ chế vô hiệu hóa khi đổi quyền.</p>
+</section>
+
+<section id="seed"><div class="eyebrow muted">05 · Khởi tạo dữ liệu</div><h2>Seeder tạo nền tảng RBAC và super admin</h2>
+<div class="flow"><div class="node"><b>DatabaseSeeder</b><small>Điều phối</small></div><span class="arrow">→</span><div class="node"><b>RolePermissionSeeder</b><small>5 roles, 29 permissions, sync pivot</small></div><span class="arrow">→</span><div class="node"><b>AdminUserSeeder</b><small>Hash password, gán super_admin</small></div></div>
+<pre><code>$role = Role::updateOrCreate(['name' => $name], ['description' => $text]);
+$role->permissions()->sync($permissionIds);
+
+$user = User::updateOrCreate(
+    ['email' => config('admin.email')],
+    ['password' => Hash::make(config('admin.password')), /* ... */]
+);
+$user->roles()->syncWithoutDetaching([$superAdminRoleId]);</code></pre>
+<p><code>updateOrCreate</code> tìm theo khóa đầu tiên, cập nhật nếu có hoặc tạo mới. <code>sync</code> thay toàn bộ tập permission của role; <code>syncWithoutDetaching</code> thêm role mà giữ các role đã có. Transaction đảm bảo các thao tác DB trong khối cùng thành công hoặc cùng rollback.</p>
+<p class="note warn">Idempotent ở đây nghĩa là không sinh dữ liệu trùng, không có nghĩa “không thay dữ liệu cũ”. Seed lại role sẽ đặt ma trận quyền về định nghĩa trong seeder. Seed lại admin sẽ đặt password/status/username theo ADMIN_* hiện tại.</p>
+<p><code>.env → config/admin.php → config('admin.password')</code>: biến môi trường được đọc qua config, phù hợp cơ chế config cache. Không ghi mật khẩu vào source hay tài liệu.</p>
+</section>
+
+<section id="auth"><div class="eyebrow muted">06 · Authentication</div><h2>Đăng nhập là xác thực danh tính, sau đó mới xét quyền admin</h2>
+<p class="path">AdminLoginRequest.php → AdminAuthController.php → User.php</p>
+<ol class="steps"><li><b>GET /admin:</b> guest middleware và controller trả form login.</li><li><b>POST /admin/login:</b> web middleware đọc session và kiểm tra CSRF; FormRequest validate email/password/remember.</li><li><b>Limiter:</b> khóa theo email viết thường + IP; đủ 5 thất bại thì tạm từ chối 60 giây.</li><li><b>Auth::attempt:</b> dùng guard web/session và provider users, tra email và kiểm tra mật khẩu với hash.</li><li><b>Kiểm tra active/admin:</b> user bị blocked/inactive hoặc thiếu role quản trị bị logout ngay, session bị hủy và bộ đếm thất bại tăng.</li><li><b>Thành công:</b> xóa bộ đếm, regenerate session, redirect tới intended URL hoặc dashboard.</li></ol>
+<pre><code>if (! Auth::attempt($request->only('email', 'password'),
+        $request->boolean('remember'))) {
+    $request->recordFailedAttempt();
+    $this->throwAuthenticationException();
+}
+
+// Kiểm tra user->isActive() và user->isAdmin() ở đây.
+$request->clearRateLimit();
+$request->session()->regenerate();
+return redirect()->intended(route('admin.dashboard'));</code></pre>
+<div class="grid"><div class="card"><h3>Cookie & session</h3><p>Cookie giúp trình duyệt liên kết các request với session. Laravel lưu danh tính đăng nhập trong session; password không được gửi lại trên từng request dashboard.</p></div><div class="card"><h3>Regenerate</h3><p>Đổi session ID sau đăng nhập để chống session fixation. Logout gọi invalidate rồi regenerateToken để bỏ phiên và tạo CSRF token mới.</p></div><div class="card"><h3>Remember me</h3><p>Cookie ghi nhớ và remember_token cho phép phục hồi đăng nhập. Middleware active vẫn cần chạy trên request để chặn tài khoản bị khóa.</p></div></div>
+<details><summary>Tại sao mọi lỗi đăng nhập dùng cùng một thông báo?</summary><p>Để không tiết lộ email có tồn tại hay không, user có role gì hoặc tài khoản đang bị khóa. Dữ liệu nhập sai định dạng vẫn có validation message riêng. Form không bao giờ điền lại password bằng old().</p></details>
+<p>Frontend dùng <code>@csrf</code>, <code>old('email')</code>, <code>@error</code>. Checkbox remember có <code>value="1"</code> để hợp rule boolean. Nút loading chỉ cải thiện UX; bảo mật vẫn nằm ở backend.</p>
+</section>
+
+<section id="rbac"><div class="eyebrow muted">07 · Authorization</div><h2>Từ role đến quyền thực hiện hành động</h2>
+<div class="flow"><div class="node"><b>users</b><small>Ai?</small></div><span class="arrow">↔</span><div class="node"><b>user_roles</b><small>user_id + role_id</small></div><span class="arrow">↔</span><div class="node"><b>roles</b><small>Nhóm nhiệm vụ</small></div><span class="arrow">↔</span><div class="node"><b>role_permissions</b><small>role_id + permission_id</small></div><span class="arrow">↔</span><div class="node"><b>permissions</b><small>Được làm gì?</small></div></div>
+<pre><code>public function hasPermission(string $permission): bool
+{
+    if ($this->isSuperAdmin()) return true;
+
+    return $this->roles()
+        ->whereHas('permissions', fn (Builder $q) =>
+            $q->where('permissions.name', $permission))
+        ->exists();
+}</code></pre>
+<p>Chỉ cần một role cấp quyền là user có quyền đó. Không có bảng permission trực tiếp cho user, không có “deny” override. <code>hasAnyPermission</code> là OR. <code>User::permission(...)</code> lọc liên kết thật trong DB, không tự bao gồm super_admin theo cơ chế bypass; khác với helper kiểm tra quyền.</p>
+<h3>Ba tầng sử dụng cùng RBAC</h3><table><tr><th>Tầng</th><th>Code</th><th>Tác dụng</th></tr><tr><td>Route</td><td><code>permission:contacts.update</code></td><td>Chặn HTTP request trước controller</td></tr><tr><td>FormRequest</td><td><code>$this->user()?->can('contacts.update')</code></td><td>Authorize thao tác cụ thể trước validate</td></tr><tr><td>Blade</td><td><code>@can('contacts.update')</code></td><td>Ẩn/hiện nút, không thay thế bảo vệ server</td></tr></table>
+<pre><code>// AuthServiceProvider::boot()
+Gate::before(function (User $user, string $ability): ?bool {
+    return $user->hasPermission($ability) ? true : null;
+});</code></pre>
+<p><code>true</code> cho phép; <code>null</code> để Laravel kiểm tra Gate/Policy tiếp theo. Hiện không có Gate/Policy khác cho các ability module nên không có quyền sẽ bị từ chối. Bypass của super_admin nằm trong model và vì thế có hiệu lực cả middleware lẫn Gate.</p>
+<h3>Mô phỏng pipeline quyền</h3><div class="sim"><div class="grid"><label>Vai trò<select id="sim-role"><option value="guest">Chưa đăng nhập</option><option value="customer">Khách hàng (không role admin)</option><option value="super_admin">super_admin</option><option value="admin">admin</option><option value="catalog_manager">catalog_manager</option><option value="order_manager">order_manager</option><option value="customer_support" selected>customer_support</option></select></label><label>Trạng thái<select id="sim-status"><option value="active">active</option><option value="blocked">blocked</option><option value="inactive">inactive</option></select></label><label>Module<select id="sim-permission"><option value="dashboard.view">dashboard.view</option><option value="products.view">products.view</option><option value="orders.view">orders.view</option><option value="contacts.view" selected>contacts.view</option><option value="contacts.update">contacts.update</option></select></label></div><div id="sim-result" class="result" role="status"></div><small>Mô phỏng ma trận seed mặc định để học, không truy cập database và không thay đổi quyền thật.</small></div>
+<p class="note">Thứ tự quan trọng: <code>auth → active → admin → permission</code>. Super admin vẫn bị chặn nếu account inactive. Một role mới dù có permission cũng chưa vào được admin nếu chưa thuộc <code>Role::ADMIN_ROLES</code>.</p>
+</section>
+
+<section id="contact"><div class="eyebrow muted">08 · Client contact</div><h2>Form gửi dữ liệu thật đến MySQL</h2><p class="path">frontend/contact.blade.php → StoreContactRequest → ContactController::store → Contact</p>
+<div class="flow"><div class="node"><b>Form POST</b><small>name + value + CSRF</small></div><span class="arrow">→</span><div class="node"><b>Throttle</b><small>5/phút/IP</small></div><span class="arrow">→</span><div class="node"><b>Validation</b><small>Giới hạn, email, reason, honeypot</small></div><span class="arrow">→</span><div class="node"><b>INSERT</b><small>status mặc định new</small></div><span class="arrow">→</span><div class="node"><b>Redirect GET</b><small>Flash thành công</small></div></div>
+<pre><code>// FormRequest::rules() — ví dụ rút gọn
+'email'      => ['required', 'email', 'max:255'],
+'reason'     => ['required', Rule::in(array_keys(Contact::REASONS))],
+'message'    => ['required', 'string', 'max:5000'],
+'order_code' => ['nullable', 'string', 'max:50'],
+'website'    => ['nullable', 'max:0'],
+
+// Controller::store()
+Contact::create($request->safe()->except('website'));
+return redirect()->route('contact')->with('success', '...');</code></pre>
+<p><code>website</code> là honeypot ẩn: khách bình thường bỏ trống, bot tự điền sẽ bị từ chối. Nó không được lưu. <code>safe()</code> chỉ lấy dữ liệu đã validate; request cố thêm <code>status=resolved</code> sẽ không vào payload tạo bản ghi. DB tự đặt status = new.</p>
+<p>Chủ đề lưu mã như <code>order</code>, <code>warranty</code> và <code>other</code>; nhãn tiếng Việt nằm trong <code>Contact::REASONS</code>. Tách mã khỏi nhãn giúp đổi ngôn ngữ mà không sửa dữ liệu cũ.</p>
+<details><summary>required HTML khác required Laravel như thế nào?</summary><p>HTML giúp phát hiện lỗi nhanh trên trình duyệt. Người dùng có thể bỏ qua bằng công cụ khác; FormRequest server mới quyết định có lưu dữ liệu không. Validation sai ở form web thường redirect kèm errors và old input; request JSON thường nhận HTTP 422.</p></details>
+</section>
+
+<section id="admin"><div class="eyebrow muted">09 · Admin contact</div><h2>Truy vấn danh sách, lọc và đổi trạng thái</h2><p class="path">AdminContactIndexRequest → AdminContactController::index → admin/contacts/index.blade.php</p>
+<pre><code>$filters = $request->validated();
+$contacts = Contact::query()
+    ->search($filters['q'] ?? null)
+    ->status($filters['status'] ?? null)
+    ->reason($filters['reason'] ?? null)
+    ->latest()->paginate(15)->withQueryString();
+
+return view('admin.contacts.index', compact('contacts', /* ... */));</code></pre>
+<ul><li><code>latest()</code> sắp xếp created_at giảm dần. Bản ghi có cùng timestamp chưa có tie-break id riêng.</li><li><code>paginate(15)</code> đếm tổng và chỉ lấy trang hiện tại; không tải cả bảng để JS phân trang.</li><li><code>withQueryString()</code> giữ q/status/reason khi nhấn trang tiếp theo.</li><li>View dùng <code>{{ $contact->message }}</code> để escape; details/summary cho phép mở nội dung dài.</li><li>Phân trang Bootstrap được đăng ký bằng <code>Paginator::useBootstrapFive()</code>.</li></ul>
+<h3>Đổi trạng thái bằng PATCH</h3><pre><code>Route::patch('contacts/{contact}/status', ...)
+    ->middleware('permission:contacts.update');
+
+// HTML form chỉ gửi GET/POST nên dùng:
+@csrf
+@method('PATCH')
+
+// Laravel bind {contact} thành model; ID không tồn tại → 404.
+public function updateStatus(UpdateContactStatusRequest $request, Contact $contact)
+{
+    $contact->update($request->validated());
+    return back()->with('success', '...');
+}</code></pre><p>Status chỉ chấp nhận bốn mã đã khai báo. Hiện cho phép chuyển giữa bất kỳ hai trạng thái hợp lệ, chưa có state machine bắt buộc theo trình tự và chưa ghi audit người cập nhật.</p>
+</section>
+
+<section id="email"><div class="eyebrow muted">10 · Reply và SMTP</div><h2>Modal là giao diện; controller mới quyết định nơi nhận</h2><div class="flow"><div class="node"><b>Nút Reply</b><small>data-bs-* và data-reply-*</small></div><span class="arrow">→</span><div class="node"><b>Bootstrap modal</b><small>Điền action/email/ID</small></div><span class="arrow">→</span><div class="node"><b>POST reply</b><small>CSRF + permission + validate</small></div><span class="arrow">→</span><div class="node"><b>Mailable</b><small>Render Blade email</small></div><span class="arrow">→</span><div class="node"><b>SMTP</b><small>Cấu hình MAIL_*</small></div></div>
+<pre><code>// AdminContactController::reply() — rút gọn
+Mail::to($contact->email)->send(new ContactReplyMail(
+    $contact->full_name,
+    $data['subject'],
+    $data['reply_message'],
+));</code></pre>
+<p>Route model binding lấy contact thật. Server gửi đến <code>$contact->email</code>, không tin field email từ browser. Email hiển thị trong modal chỉ giúp admin xác nhận; sửa nó trên DevTools không đổi người nhận ở server.</p>
+<table><tr><th>File</th><th>Trách nhiệm</th></tr><tr><td><code>ReplyContactRequest.php</code></td><td>contacts.update; subject tối đa 200 và không chứa CR/LF; nội dung tối đa 10.000 ký tự</td></tr><tr><td><code>ContactReplyMail.php</code></td><td>Envelope cung cấp subject, Content chọn view email; from dùng cấu hình toàn cục</td></tr><tr><td><code>emails/contact-reply.blade.php</code></td><td>Render lời chào và nội dung escaped; white-space:pre-wrap giữ xuống dòng</td></tr><tr><td><code>config/mail.php</code></td><td>Đọc MAIL_MAILER, SMTP host/port/encryption/credentials và MAIL_FROM_*</td></tr></table>
+<details open><summary>Vì sao trước đây modal bị màn đen che?</summary><p>Modal nằm trong container nội dung có thể bị stacking context của template giữ ở dưới backdrop. Tăng z-index của con không luôn thoát được stacking context của cha. Dự án dùng <code>@push('modals')</code> ở view và <code>@stack('modals')</code> trong layout sau page-wrapper để modal và backdrop ở cấp body phù hợp.</p></details>
+<p>JavaScript nghe <code>show.bs.modal</code>, lấy <code>event.relatedTarget</code> để biết nút nào được bấm; cập nhật form.action và textContent. Khi gửi thì disable nút. Validation hoặc transport lỗi giữ old input để thử lại. Các data attributes không phải ranh giới bảo mật.</p>
+<p class="note warn">Mail hiện gửi đồng bộ. SMTP lỗi được bắt qua TransportExceptionInterface và báo lỗi, chưa có retry queue, lịch sử phản hồi hoặc cơ chế chống gửi trùng tuyệt đối. Gửi thành công nghĩa là mail transport chấp nhận xử lý, chưa chứng minh khách đã nhận/đọc. Reply không tự thay status contact.</p>
+<pre><code>MAIL_MAILER=smtp
+MAIL_HOST=smtp.your-provider.com
+MAIL_PORT=587
+MAIL_USERNAME=support@your-domain.com
+MAIL_PASSWORD="YOUR_SMTP_PASSWORD"
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=support@your-domain.com
+MAIL_FROM_NAME="Customer Support"
+
+# Sau khi đổi .env:
+php artisan config:clear</code></pre><p>Mailpit phục vụ bắt thư phát triển, không chuyển tới hộp thư thật. Giá trị mẫu trong tài liệu không phải cấu hình SMTP thật hay thông tin bí mật.</p>
+</section>
+
+<section id="security"><div class="eyebrow muted">11 · Phòng vệ theo lớp</div><h2>Mỗi lớp giải quyết một loại lỗi khác nhau</h2><table><tr><th>Cơ chế</th><th>Giải quyết</th><th>Không thay thế được</th></tr><tr><td>Auth/session</td><td>Xác thực user đang dùng hệ thống</td><td>Role, permission</td></tr><tr><td>Middleware active/admin/permission</td><td>Quyết định truy cập server</td><td>Validation dữ liệu</td></tr><tr><td>CSRF</td><td>Kiểm tra token gắn với session cho request thay đổi dữ liệu</td><td>XSS, auth hay permission</td></tr><tr><td>Validation + safe()/validated()</td><td>Kiểu, độ dài và danh sách trường cho phép</td><td>Ràng buộc DB</td></tr><tr><td>Escape Blade</td><td>Ngăn nội dung người dùng biến thành HTML/script</td><td>Kiểm tra business rule</td></tr><tr><td>Query binding</td><td>Không ghép giá trị người dùng thành SQL thực thi</td><td>Giới hạn quyền xem dữ liệu</td></tr><tr><td>Rate limit/honeypot</td><td>Giảm spam và brute force đơn giản</td><td>Chống mọi bot, distributed attack</td></tr><tr><td>.htaccess</td><td>Hạn chế public exposure của source và file nhạy cảm</td><td>Authorization trong Laravel</td></tr></table>
+<p>Trong production, dùng DocumentRoot trỏ public, HTTPS, APP_DEBUG=false và tài khoản DB có quyền phù hợp. .env không commit Git. Mật khẩu phải hash một chiều bằng Hash::make, không lưu plaintext hoặc tự so chuỗi với hash.</p>
+<details><summary>Điểm cần ghi nhớ khi tiếp tục mở rộng code</summary><p>Gate hiện cho phép dựa trên hasPermission mà không tự kiểm tra active/admin, nên route mới phải giữ middleware tương ứng. Không truyền toàn bộ request vào User::update vì fillable hiện có status: cần whitelist riêng theo từng chức năng. Nếu đưa quyền vào cache thì phải xử lý khi quyền thay đổi. Các vấn đề này là điều kiện cần quan tâm khi thêm module, không có nghĩa mọi helper tự bảo vệ đủ mọi ngữ cảnh.</p></details>
+</section>
+
+<section id="tests"><div class="eyebrow muted">12 · Kiểm thử và chẩn đoán</div><h2>MySQL cho website, SQLite in-memory cho tests</h2><div class="grid"><div class="card"><h3>Website / artisan migrate</h3><p>Đọc DB_* từ cấu hình ứng dụng. Môi trường local dùng MySQL, xem được bằng phpMyAdmin.</p></div><div class="card"><h3>php artisan test</h3><p>phpunit.xml ép DB_CONNECTION=sqlite và DB_DATABASE=:memory:. RefreshDatabase dựng schema test cách ly.</p></div></div>
+<pre><code>php artisan config:clear
+php artisan test
+php artisan test --filter=ContactFeatureTest
+
+Mail::fake();
+// Gửi POST reply bằng test client...
+Mail::assertSent(ContactReplyMail::class, fn ($mail) =>
+    $mail->hasTo($contact->email)
+);</code></pre>
+<p>Mail fake kiểm tra ứng dụng yêu cầu gửi đúng email; không kiểm tra SMTP thật hoặc khả năng nhận Inbox. Feature test đăng nhập/permission dùng user/role trong DB test, còn HTTP thực tế cần CSRF, cookie và SMTP cấu hình thật.</p>
+<p class="note warn">Bài học từ lỗi đã gặp: khi test chưa override DB, RefreshDatabase có thể làm mới database development. Luôn giữ database test tách biệt, xóa config cache trước khi test nếu trước đó đã cache cấu hình.</p>
+<table><tr><th>Mã/triệu chứng</th><th>Kiểm tra theo thứ tự</th></tr><tr><td>302 về login</td><td>Cookie, session, auth và intended URL</td></tr><tr><td>403</td><td>Admin role, permission, FormRequest::authorize</td></tr><tr><td>419</td><td>CSRF token, session hết hạn, hostname không nhất quán</td></tr><tr><td>422 JSON / lỗi form</td><td>Validation rules, field name, dữ liệu input</td></tr><tr><td>429</td><td>Rate limiter theo IP/email, chờ cửa sổ giới hạn</td></tr><tr><td>404</td><td>Route method/path, rewrite hoặc model binding không tìm thấy ID</td></tr><tr><td>500</td><td>storage/logs/laravel.log: view thiếu, DB lỗi, SMTP/config lỗi</td></tr></table>
+</section>
+
+<section id="extend"><div class="eyebrow muted">13 · Bài tập mở rộng</div><h2>Công thức thêm một module mới</h2><ol class="steps"><li><b>Dữ liệu:</b> xác định bảng/cột, nullability, FK, index; tạo migration bổ sung cho DB đã chạy.</li><li><b>Model:</b> fillable theo nhu cầu, quan hệ và query scope tái sử dụng.</li><li><b>Quyền:</b> định nghĩa module.view/create/update/delete trong seeder, gán role phù hợp.</li><li><b>Request:</b> whitelist dữ liệu, validation và authorize cho từng hành động.</li><li><b>Route:</b> đặt tên nhất quán, method đúng và middleware auth/active/admin/permission.</li><li><b>Controller:</b> điều phối query/action, trả view hay redirect; transaction khi nhiều thao tác DB cần đồng bộ.</li><li><b>View:</b> layout chung, CSRF, errors, old input, escape và @can.</li><li><b>Test:</b> happy path, validation, quyền thiếu, dữ liệu không tồn tại, lỗi external service.</li></ol>
+<h3>Thử thiết kế lịch sử reply</h3><p>Hướng mở rộng: bảng contact_replies có contact_id, admin_user_id, subject, body, delivery_status, sent_at. Không đánh dấu sent trước khi transport chấp nhận. Nếu gửi qua queue, cần xử lý failed jobs, retry và nguy cơ gửi trùng. Đây là bài tập thiết kế; code hiện tại chưa có bảng này.</p>
+<details><summary>Tự giải thích lại một chức năng bằng 6 câu</summary><ol><li>Ai được gọi URL này?</li><li>Middleware nào kiểm tra quyền?</li><li>Dữ liệu nào được nhận và validate?</li><li>Model/query nào đọc hoặc ghi dữ liệu?</li><li>Response là HTML, redirect hay JSON?</li><li>Test nào chứng minh quyền và dữ liệu được xử lý đúng?</li></ol></details>
+</section>
+
+<section id="quiz"><div class="eyebrow muted">14 · Tự kiểm tra</div><h2>Ôn lại bằng tình huống</h2><p>Chọn đáp án, sau đó kiểm tra để xem giải thích. Mọi tương tác chỉ chạy trong file HTML này.</p><form id="quiz-form" class="quiz"></form><button id="check-quiz" type="button">Kiểm tra đáp án</button><p id="quiz-score" role="status"></p></section>
+<section id="settings-ops">
+<div class="eyebrow muted">15 · Cài đặt hệ thống</div><h2>Registry định nghĩa, database ghi đè, service cung cấp typed value</h2>
+<div class="flow"><div class="node"><b>config/system_settings.php</b><small>Allowlist, type, default, rules</small></div><span class="arrow">→</span><div class="node"><b>SystemSettingSeeder</b><small>Chỉ insert key còn thiếu</small></div><span class="arrow">→</span><div class="node"><b>settings table</b><small>Giá trị admin đã chỉnh</small></div><span class="arrow">→</span><div class="node"><b>SystemSettingService</b><small>Cast, cache, public allowlist</small></div></div>
+<p>Registry là contract của ứng dụng; bảng <code>settings</code> chỉ giữ giá trị theo key. Consumer không query model rải rác mà đọc qua service để luôn nhận đúng kiểu dữ liệu và fallback. Các key private như metadata email nội bộ không được đưa vào public view data.</p>
+<h3>Backfill không làm mất tùy chỉnh</h3>
+<pre><code>php artisan migrate:status
+php artisan settings:check
+php artisan db:seed --class=SystemSettingSeeder
+# hoặc: php artisan settings:check --fix-missing
+php artisan storage:link
+php artisan optimize:clear</code></pre>
+<p><code>insertOrIgnore</code> dựa trên unique index của <code>setting_key</code>: key chưa có được thêm default, key đã có được giữ nguyên. Seeder chỉ lấy các default đã khai báo trong registry, không quét hoặc sao chép secret môi trường.</p>
+<div class="table-wrap"><table><tr><th>Kiểm tra</th><th>Ý nghĩa</th><th>Cách xử lý an toàn</th></tr><tr><td>Missing key</td><td>Registry có nhưng DB chưa có</td><td>Dùng seeder hoặc <code>--fix-missing</code></td></tr><tr><td>Unknown key</td><td>DB có nhưng registry hiện tại không biết</td><td>Giữ nguyên, xác minh trước khi xóa</td></tr><tr><td>Invalid value</td><td>Giá trị không đạt rule của registry</td><td>Sửa qua admin; command không tự ghi đè</td></tr><tr><td>Missing asset</td><td>DB tham chiếu ảnh managed không tồn tại</td><td>Upload lại hoặc bỏ tham chiếu qua admin</td></tr><tr><td>Orphan asset</td><td>File managed không được setting nào tham chiếu</td><td>Đối chiếu backup/audit trước khi xóa thủ công</td></tr></table></div>
+<p class="note warn">Rollback code không đồng nghĩa xóa settings mới. Hãy sao lưu DB và storage, deploy phiên bản tương thích rồi chạy lại command kiểm tra. Không dùng <code>migrate:fresh</code> trên database cần giữ dữ liệu.</p>
+</section>
+
+<section id="menu-ops">
+<div class="eyebrow muted">16 · Menu động & backfill</div><h2>Một nguồn mặc định, backfill bảo thủ theo từng location</h2>
+<div class="flow"><div class="node"><b>config/menus.php</b><small>Defaults đệ quy + max depth 4</small></div><span class="arrow">→</span><div class="node"><b>MenuSeeder</b><small>Chỉ seed location trống</small></div><span class="arrow">→</span><div class="node"><b>menus table</b><small>Adjacency list parent_id</small></div><span class="arrow">→</span><div class="node"><b>MenuService</b><small>Published cache v2</small></div><span class="arrow">→</span><div class="node"><b>Storefront</b><small>Đệ quy tới cấp 4</small></div></div>
+<p>Header và footer được xem là hai phạm vi độc lập. Nếu header đã có dữ liệu tùy chỉnh nhưng footer còn trống, seeder giữ nguyên header và chỉ tạo footer. Nếu một location đã có bất kỳ item nào, kể cả cây 2 cấp cũ hoặc node cấp 3–4, seeder không tự đoán phần còn thiếu. Defaults được duyệt đệ quy; config vượt <code>menus.max_depth</code> làm rollback cả transaction thay vì tạo cây dở dang.</p>
+<pre><code>php artisan migrate:status
+php artisan menus:check
+php artisan migrate
+php artisan db:seed --class=MenuSeeder
+php artisan optimize:clear
+php artisan menus:check</code></pre>
+<div class="table-wrap"><table><tr><th>Tình huống</th><th>Hành vi</th></tr><tr><td>Hai location đều trống</td><td>Tạo header và footer mặc định trong transaction, hỗ trợ defaults sâu tối đa 4 cấp.</td></tr><tr><td>Header có dữ liệu, footer trống</td><td>Không chạm header; chỉ backfill footer.</td></tr><tr><td>Cây 2 cấp cũ hoặc cây sâu đã tồn tại</td><td>Giữ nguyên ID, parent, label, trạng thái và sort order; không cần migration dữ liệu.</td></tr><tr><td>Chạy seeder lần hai</td><td>Không thêm, sửa hoặc xóa item nào.</td></tr><tr><td>Default vượt max depth</td><td>Seeder ném lỗi và transaction không để lại hàng một phần.</td></tr><tr><td><code>menus:check</code></td><td>Chỉ đọc; báo cycle, parent thiếu, sai location và depth vượt 4 bằng exit code.</td></tr><tr><td>Cache published cũ</td><td>Seeder xóa cache cho mọi location/locale sau khi hoàn tất.</td></tr></table></div>
+<h3>Rollback không phá dữ liệu cấp 3–4</h3>
+<p>Nâng cấp này không thêm cột hay bảng: cây sâu vẫn lưu bằng <code>parent_id</code>. Khi rollback code, không rollback database và không chạy <code>migrate:fresh</code>; hãy sao lưu, đưa code về release cần thiết và xóa cache. Release chỉ hỗ trợ 2 cấp có thể không trình bày node sâu, vì vậy nên dùng maintenance window rồi triển khai lại renderer 4 cấp thay vì xóa hoặc kéo node sâu lên root. Sau khi khôi phục code tương thích, chạy <code>menus:check</code> và kiểm tra cả desktop, mobile, footer.</p>
+<p class="note warn">Fallback cứng mặc định tắt. Chỉ bật tạm <code>MENU_FALLBACK_ENABLED=true</code> khi khôi phục sự cố menu rỗng, rồi chạy <code>php artisan config:clear</code>. Sau khi dữ liệu database ổn định, tắt lại và dùng <code>php artisan optimize:clear</code>. Không dùng <code>migrate:fresh</code> trên database cần giữ dữ liệu.</p>
+</section>
+
+<section id="htaccess">
+<div class="eyebrow muted">17 · Apache & .htaccess trong project</div>
+<h2>URL sạch được tạo trước khi Laravel nhận request</h2>
+<p><code>.htaccess</code> là cấu hình Apache theo thư mục. Nó không phải PHP và không phải Laravel middleware. Apache có thể trả file tĩnh, redirect hoặc từ chối truy cập trước khi controller chạy. Các chỉ thị chịu ảnh hưởng của cấu hình server và cách Apache hợp nhất cấu hình thư mục; không nên hiểu ba file bên dưới như ba hàm PHP luôn chạy tuần tự.</p>
+<div class="grid">
+<div class="card"><h3>Gốc project</h3><p class="path">ecommerce-app/.htaccess</p><p>Chặn các đường dẫn source phổ biến, thêm header và ánh xạ URL vào public.</p></div>
+<div class="card"><h3>Front controller</h3><p class="path">public/.htaccess</p><p>Canonical URL, giữ Authorization và chuyển request không khớp file/thư mục vào index.php.</p></div>
+<div class="card"><h3>Assets tĩnh</h3><p class="path">public/assets/.htaccess</p><p>Tắt directory listing và chặn các đuôi script server đã liệt kê trong assets.</p></div>
+</div>
+<h3>1. Rewrite nội bộ khác redirect như thế nào?</h3>
+<table><tr><th>Thao tác</th><th>Ví dụ trong project</th><th>Trình duyệt</th></tr><tr><td>Internal rewrite</td><td><code>assets/admin/css/app.css → public/assets/admin/css/app.css</code></td><td>Giữ URL cũ, không cần một lượt HTTP redirect mới</td></tr><tr><td>Redirect 301</td><td><code>/ecommerce-app/public/shop → /ecommerce-app/shop</code></td><td>Nhận Location rồi gửi request đến URL mới; 301 có thể bị cache</td></tr><tr><td>Forbidden</td><td><code>/ecommerce-app/vendor/autoload.php</code></td><td>Nhận 403, Laravel thường chưa xử lý request này</td></tr></table>
+<div class="flow"><div class="node"><b>URL browser</b><small>/ecommerce-app/admin/contacts</small></div><span class="arrow">→</span><div class="node"><b>Rewrite nội bộ</b><small>public/admin/contacts</small></div><span class="arrow">→</span><div class="node"><b>Không có file/thư mục</b><small>public/index.php</small></div><span class="arrow">→</span><div class="node"><b>Laravel route</b><small>admin.contacts.index</small></div></div>
+<p class="note">Đây là sơ đồ logic của request thông thường, không phải log chi tiết mọi vòng rewrite của Apache. Laravel vẫn dùng URI gốc để phân giải route sau khi base path được chuẩn hóa.</p>
+<h3>2. Đọc cú pháp RewriteRule và RewriteCond</h3>
+<pre><code>RewriteEngine On
+RewriteCond TEST_STRING CONDITION [FLAGS]
+RewriteRule PATTERN SUBSTITUTION [FLAGS]</code></pre>
+<p>Trong <code>.htaccess</code>, pattern thường khớp phần đường dẫn tương đối với thư mục chứa file và không có dấu slash đầu. Rule ở gốc project thấy <code>admin/contacts</code>; rule trong public thấy đường dẫn tương đối với public. Query string không thuộc chuỗi path mà RewriteRule khớp.</p>
+<table><tr><th>Ký hiệu/flag</th><th>Đọc như thế nào trong code</th></tr><tr><td><code>^</code>, <code>$</code>, <code>^$</code></td><td>Đầu chuỗi, cuối chuỗi, chuỗi rỗng tương ứng trang gốc thư mục</td></tr><tr><td><code>(.+)</code>, <code>(.*)</code>, <code>$1</code></td><td>Bắt ít nhất một/bất kỳ số ký tự và dùng nhóm thứ nhất từ RewriteRule làm đích</td></tr><tr><td><code>%1</code></td><td>Nhóm bắt từ RewriteCond gần nhất; khác với $1 của RewriteRule</td></tr><tr><td><code>(?:...)</code>, <code>|</code></td><td>Nhóm không capture và lựa chọn OR trong regex</td></tr><tr><td><code>-</code> ở đích</td><td>Không thay chuỗi đường dẫn; có thể vẫn áp dụng flag như F hoặc E</td></tr><tr><td><code>[L]</code></td><td>Dừng lượt xử lý rules hiện tại; rewrite thư mục có thể tạo lượt xử lý mới. Không đồng nghĩa kết thúc toàn bộ request</td></tr><tr><td><code>[F]</code></td><td>Trả Forbidden 403, ngầm có tác dụng dừng như L</td></tr><tr><td><code>[R=301]</code></td><td>Yêu cầu browser chuyển URL vĩnh viễn</td></tr><tr><td><code>[NC]</code></td><td>Khớp không phân biệt chữ hoa/thường</td></tr><tr><td><code>[NE]</code></td><td>Không escape một số ký tự đặc biệt trong redirect; không phải tính năng bảo mật, cần lưu ý URL có ký tự đặc biệt</td></tr><tr><td><code>[E=NAME:value]</code></td><td>Đặt biến môi trường Apache cho request</td></tr></table>
+<p>Các RewriteCond liền trước thường kết hợp AND và áp dụng cho rule theo sau. Muốn OR phải khai báo phù hợp; đừng nhầm OR trong regex với OR giữa các điều kiện.</p>
+<h3>3. Các nhóm rule tại gốc project</h3>
+<pre><code>Options -MultiViews -Indexes
+
+RewriteRule ^(?:app|bootstrap|config|database|docs|resources|routes|storage|tests|vendor)(?:/|$) - [F,L,NC]
+
+RewriteRule ^public(?:/|$) - [L]
+RewriteRule ^$ public/ [L]
+RewriteRule ^(.+)$ public/$1 [L]</code></pre>
+<ul><li><code>-Indexes</code>: không liệt kê nội dung thư mục khi không có index. Không ngăn việc tải một file cụ thể nếu file đó được cho phép.</li><li><code>-MultiViews</code>: tránh cơ chế content negotiation tự chọn file gần tên, gây xung đột router/rewrite.</li><li>Danh sách thư mục dùng <code>(?:/|$)</code> để chặn đúng thư mục hoặc phần con; tránh nhầm một tên chỉ có cùng tiền tố.</li><li>Rule <code>^public</code> giúp không tiếp tục gắn thêm public ở lượt xử lý đường dẫn đã vào public.</li><li>Trang gốc được đưa vào <code>public/</code>, các đường dẫn còn lại được đưa vào <code>public/$1</code>.</li></ul>
+<details><summary>Chặn file nhạy cảm bằng FilesMatch</summary>
+<pre><code>&lt;FilesMatch "^\."&gt;
+    Require all denied
+&lt;/FilesMatch&gt;
+
+&lt;FilesMatch "(?i)\.(?:bak|conf|dist|env|ini|log|sql|sqlite|yml|yaml)$"&gt;
+    Require all denied
+&lt;/FilesMatch&gt;</code></pre>
+<p>FilesMatch xét tên file theo regex; <code>^\.</code> nhắm tên bắt đầu bằng dấu chấm, còn <code>(?i)</code> bật khớp không phân biệt hoa/thường. Các rule này kết hợp với rule đường dẫn để hạn chế tải .env, log và bản sao cấu hình. Chúng không phải danh sách cho phép tuyệt đối cho mọi file/thư mục có thể xuất hiện sau này.</p>
+</details>
+<h3>4. Tại sao dùng THE_REQUEST để redirect /public?</h3>
+<pre><code># Trong public/.htaccess
+RewriteCond %{THE_REQUEST} \s/+(.*/)?public(?:[/\s?]) [NC]
+RewriteRule ^(.*)$ /ecommerce-app/$1 [R=301,L,NE]</code></pre>
+<p><code>THE_REQUEST</code> chứa dòng HTTP gốc, ví dụ <code>GET /ecommerce-app/public/shop HTTP/1.1</code>. Rewrite nội bộ không sửa dòng gốc này. Vì vậy request browser có /public mới bị canonical redirect; đường dẫn được Apache tự rewrite vào public không bị redirect lặp lại về URL sạch.</p>
+<p class="note warn">Project có rule xử lý /public ở cả gốc và public/.htaccess; hành vi thực tế còn phụ thuộc xử lý thư mục của Apache. Rule public dùng prefix cố định <code>/ecommerce-app/</code>. Đổi tên thư mục hoặc chuyển domain root phải rà cả hai nơi, không chỉ sửa APP_URL.</p>
+<h3>5. Chuyển request vào index.php</h3>
+<pre><code>RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ index.php [L]</code></pre>
+<p><code>REQUEST_FILENAME</code> là đường dẫn filesystem mà Apache đang xử lý; <code>!-d</code> nghĩa là không phải thư mục, <code>!-f</code> là không phải file. Nếu assets tồn tại, Apache trả file; nếu /admin/contacts không tồn tại vật lý, index.php nhận request và Laravel tìm route. File asset bị thiếu có thể rơi vào Laravel và nhận 404 HTML thay vì CSS/JS.</p>
+<p>Rule redirect trailing slash phía trên chỉ áp dụng khi đích không phải thư mục. Điều kiện URI bắt đường dẫn bỏ slash cuối và dùng <code>%1</code> làm đích 301. Rule Authorization dùng <code>[E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]</code> để giữ header cho PHP; chức năng login admin hiện dựa trên session cookie, không dựa trên Bearer token.</p>
+<h3>6. Assets và security headers</h3>
+<pre><code># public/assets/.htaccess
+Options -Indexes
+&lt;FilesMatch "(?i)\.(?:php[0-9]?|phtml|phar|cgi|pl|py|sh)$"&gt;
+    Require all denied
+&lt;/FilesMatch&gt;
+
+&lt;IfModule mod_php.c&gt;
+    php_flag engine off
+&lt;/IfModule&gt;</code></pre>
+<p>Đây là lớp bổ sung để chặn các đuôi script đã liệt kê trong thư mục tĩnh. php_flag chỉ chạy khi module mod_php phù hợp hiện diện; không thay thế cấu hình PHP-FPM/handler trên máy khác. Đừng xem rule này như cơ chế kiểm soát upload đầy đủ.</p>
+<table><tr><th>Header gốc</th><th>Mục đích</th></tr><tr><td><code>X-Content-Type-Options: nosniff</code></td><td>Giảm việc trình duyệt suy đoán MIME khác Content-Type được trả</td></tr><tr><td><code>Referrer-Policy: strict-origin-when-cross-origin</code></td><td>Giới hạn thông tin referrer khi đi sang origin khác</td></tr><tr><td><code>X-Frame-Options: SAMEORIGIN</code></td><td>Hạn chế nhúng trang trong frame từ origin khác</td></tr></table>
+<p>Headers chỉ được thêm trong khối IfModule mod_headers khi module khả dụng. Các header này không thay thế CSRF, validation, phân quyền hay HTTPS.</p>
+<h3>7. Cầu nối với public/index.php và APP_URL</h3>
+<p>Apache chạy script vật lý <code>public/index.php</code> nhưng browser dùng URL không có public. Code project chuẩn hóa <code>SCRIPT_NAME</code> và <code>PHP_SELF</code>, bỏ đoạn /public/index.php ở trường hợp URL sạch, giúp Laravel xác định base URL thư mục con. Đây là tùy chỉnh riêng cho cách chạy local hiện tại.</p>
+<p><code>APP_URL=http://localhost/ecommerce-app</code> giúp tạo URL, đặc biệt trong CLI; không tự bật rewrite hay thay DocumentRoot. <code>asset('assets/admin/css/app.css')</code> vẫn trỏ URL assets sạch. Không di chuyển file CSS/JS ra gốc để bỏ /public.</p>
+<h3>8. Kiểm tra và chẩn đoán</h3>
+<pre><code># PowerShell tại project: kiểm tra cấu hình server chính
+&amp; 'C:\xampp\apache\bin\httpd.exe' -t
+
+# HTTP thực tế mới xác nhận .htaccess theo thư mục có hoạt động
+curl.exe -I http://localhost/ecommerce-app/
+curl.exe -I http://localhost/ecommerce-app/public/shop
+curl.exe -I http://localhost/ecommerce-app/assets/admin/css/app.css
+curl.exe -I http://localhost/ecommerce-app/.env
+curl.exe -I http://localhost/ecommerce-app/vendor/autoload.php</code></pre>
+<table><tr><th>Kết quả</th><th>Điều cần hiểu</th></tr><tr><td>Trang chủ / asset 200</td><td>Request thông thường được phục vụ</td></tr><tr><td>/public/shop 301</td><td>Kiểm tra Location là /ecommerce-app/shop, không chứa C:/xampp hay lặp public</td></tr><tr><td>.env / vendor 403</td><td>Những đường dẫn được kiểm tra đã bị chặn; không chứng minh mọi đường dẫn đều an toàn</td></tr><tr><td>500 Apache</td><td>Xem Apache error.log: directive không hợp lệ/không được phép, handler hoặc rewrite loop</td></tr><tr><td>Rule không có tác dụng</td><td>Kiểm tra AllowOverride, module, đúng DocumentRoot và đúng file .htaccess</td></tr><tr><td>Redirect cũ vẫn lặp</td><td>301 có thể được browser cache; dùng curl hoặc cửa sổ riêng tư để kiểm tra</td></tr></table>
+<p class="note">httpd -t không thay cho request thực tế để phát hiện mọi lỗi .htaccess được đọc khi xử lý thư mục. Thay file .htaccess thường áp dụng ở request sau; sửa cấu hình Apache chính thường cần reload/restart. Xóa cache Laravel không sửa được lỗi cấu hình Apache.</p>
+<h3>9. Giới hạn của cách triển khai hiện tại</h3>
+<p>Root project vẫn ở trong vùng Apache có thể phục vụ, nên cần rule chặn và phải rà khi thêm thư mục/file mới. Rule chặn storage hiện cũng ngăn cách truy cập trực tiếp /storage theo URL sạch, cần thiết kế lại nếu sau này phục vụ public uploads. File HTML này nằm trong docs bị chặn qua HTTP; mở bằng file local để học.</p>
+<p>DocumentRoot trỏ thẳng public giúp giảm phần source nằm trong web root. Khi chuyển cách triển khai, cần rà các redirect /public và đoạn chuẩn hóa base path riêng, không copy nguyên cấu hình local mà không kiểm tra. .htaccess không áp dụng cho Nginx hay PHP development server như Apache.</p>
+<details><summary>Ôn tập nhanh: hãy tự giải thích trước khi mở</summary><ol><li><b>Vì sao [L] chưa chắc chấm dứt mọi rewrite?</b> Nó dừng lượt hiện tại; ánh xạ nội bộ có thể làm Apache xử lý lại theo thư mục.</li><li><b>Tại sao asset tồn tại không cần Laravel controller?</b> Điều kiện !-f không đạt nên rule front controller không chạy.</li><li><b>Vì sao chỉ đổi APP_URL chưa bỏ được /public?</b> APP_URL là cấu hình ứng dụng; Apache mới ánh xạ URL vào filesystem.</li><li><b>403 từ Apache khác 403 middleware?</b> Apache có thể từ chối trước Laravel; middleware từ chối sau khi request đã vào ứng dụng.</li></ol></details>
+<p class="muted">Tham khảo chính thức: <a href="https://httpd.apache.org/docs/2.4/howto/htaccess.html" target="_blank" rel="noopener noreferrer">Apache .htaccess</a> và <a href="https://httpd.apache.org/docs/2.4/rewrite/flags.html" target="_blank" rel="noopener noreferrer">RewriteRule flags</a>. Nội dung mô tả cấu hình project tại thời điểm viết, không tự thay đổi cấu hình server.</p>
+</section>
+<footer>Tài liệu tự chứa · mở offline · không kết nối DB hay gửi email · đối chiếu source khi code thay đổi</footer>
+</main>
+<script>
+'use strict';
+const trace=[['Apache nhận request','URL /ecommerce-app/admin/contacts được rewrite vào public/index.php. File tĩnh được phục vụ trực tiếp khi tồn tại.'],['Laravel khởi động','HTTP Kernel chạy nhóm web: cookie, session, chia sẻ errors, CSRF và binding. Thứ tự thực thi có thể được Laravel điều phối theo middleware priority.'],['Tìm route','GET /admin/contacts khớp AdminContactController::index, tên route admin.contacts.index.'],['Kiểm tra hàng rào','auth xác nhận đăng nhập; active kiểm tra status; admin kiểm tra role; permission kiểm tra contacts.view. Không đạt thì request kết thúc sớm.'],['FormRequest xử lý','AdminContactIndexRequest authorize bằng Gate, validate q/status/reason. Controller chỉ nhận dữ liệu đã hợp lệ.'],['Truy vấn database','Scope search/status/reason nối query; latest và paginate(15) lấy trang hiện tại. MySQL trả bản ghi qua model Contact.'],['Render và trả response','Blade tạo HTML, @can lọc menu/action, {{ }} escape dữ liệu. Trình duyệt nhận HTML; CSS/JS tạo tương tác.']];let traceIndex=0;function showTrace(){document.getElementById('trace-count').textContent=`${traceIndex+1} / ${trace.length}`;document.getElementById('trace-title').textContent=trace[traceIndex][0];document.getElementById('trace-detail').textContent=trace[traceIndex][1];document.getElementById('trace-next').textContent=traceIndex===trace.length-1?'Xem lại từ đầu ↻':'Bước tiếp theo →'}document.getElementById('trace-next').addEventListener('click',()=>{traceIndex=(traceIndex+1)%trace.length;showTrace()});showTrace();
+const matrix={admin:['dashboard.view','products.view','orders.view','contacts.view','contacts.update'],catalog_manager:['dashboard.view','products.view'],order_manager:['dashboard.view','orders.view'],customer_support:['dashboard.view','orders.view','contacts.view','contacts.update']};function simulate(){const role=document.getElementById('sim-role').value,status=document.getElementById('sim-status').value,permission=document.getElementById('sim-permission').value;let title,detail;if(role==='guest'){title='302 → /admin';detail='Dừng ở auth: chưa có danh tính đăng nhập.'}else if(status!=='active'){title='Logout + redirect';detail='Dừng ở active: session bị hủy, kể cả super_admin.'}else if(role==='customer'){title='403 Forbidden';detail='Dừng ở admin: user không có role trong ADMIN_ROLES.'}else if(role==='super_admin'||matrix[role].includes(permission)){title='Được đi tiếp';detail=`Đạt auth → active → admin → permission:${permission}. Controller có thể xử lý request.`}else{title='403 Forbidden';detail=`Dừng ở permission: role ${role} không được cấp ${permission}.`}const box=document.getElementById('sim-result');box.replaceChildren();const strong=document.createElement('div');strong.className='status';strong.textContent=title;const p=document.createElement('p');p.textContent=detail;box.append(strong,p)}['sim-role','sim-status','sim-permission'].forEach(id=>document.getElementById(id).addEventListener('change',simulate));simulate();
+const questions=[['Ẩn nút Reply bằng @can đã đủ bảo vệ chưa?',['Đủ vì không ai nhìn thấy nút','Chưa, route và backend phải kiểm tra quyền'],1,'Người dùng có thể tự tạo HTTP request; UI không phải ranh giới bảo mật.'],['Sau khi thêm migration mới, dùng lệnh nào để giữ dữ liệu cũ?',['php artisan migrate','php artisan migrate:fresh'],0,'migrate áp dụng file chưa chạy; fresh xóa bảng và dựng lại.'],['Khách sửa email người nhận bằng DevTools, reply gửi tới đâu?',['Email từ bản ghi Contact ở server','Email được sửa trên trình duyệt'],0,'Controller dùng Mail::to($contact->email), không dùng field email của request.'],['hasPermission và isActive có cùng nhiệm vụ không?',['Có, có quyền thì luôn active','Không, role/permission và trạng thái là hai kiểm tra riêng'],1,'Middleware active kiểm tra trạng thái trước khi cho phép xử lý module.'],['Tại sao cần regenerate session sau login?',['Để đổi session ID và giảm session fixation','Để hash lại mật khẩu trong database'],0,'Đổi session ID không thay mật khẩu. Hash được kiểm tra qua authentication.'],['Mail::fake chứng minh điều gì?',['Khách chắc chắn đã đọc email','Ứng dụng yêu cầu gửi đúng Mailable/người nhận'],1,'SMTP thật, Inbox và việc mở thư cần kiểm tra khác.'],['Seeder idempotent có nghĩa gì trong dự án này?',['Chạy lại không sinh bản ghi trùng nhưng có thể cập nhật dữ liệu','Không bao giờ thay dữ liệu hiện có'],0,'updateOrCreate cập nhật; sync thay ma trận quyền; admin seeder đặt lại password.'],['Vì sao search() nhóm các orWhere trong closure?',['Giữ điều kiện OR trong ngoặc trước khi AND với status/reason','Để JavaScript có thể chạy SQL'],0,'Không nhóm OR có thể làm bản ghi không đúng status vẫn lọt vào kết quả.']];const quiz=document.getElementById('quiz-form');questions.forEach((q,i)=>{const field=document.createElement('fieldset');field.style.cssText='border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px';const legend=document.createElement('legend');legend.textContent=`${i+1}. ${q[0]}`;field.append(legend);q[1].forEach((answer,j)=>{const label=document.createElement('label');const input=document.createElement('input');input.type='radio';input.name=`q${i}`;input.value=j;label.append(input,document.createTextNode(answer));field.append(label)});const result=document.createElement('p');result.id=`qr${i}`;result.className='quiz-result';field.append(result);quiz.append(field)});document.getElementById('check-quiz').addEventListener('click',()=>{let total=0;questions.forEach((q,i)=>{const selected=quiz.querySelector(`input[name="q${i}"]:checked`);const correct=selected&&Number(selected.value)===q[2];if(correct)total++;const p=document.getElementById(`qr${i}`);p.textContent=(correct?'Đúng. ':selected?'Chưa đúng. ':'Chưa chọn. ')+q[3];p.style.color=correct?'var(--green)':'var(--amber)'});document.getElementById('quiz-score').textContent=`Kết quả: ${total}/${questions.length} câu đúng.`});document.getElementById('print').addEventListener('click',()=>window.print());document.getElementById('expand').addEventListener('click',()=>document.querySelectorAll('details').forEach(item=>item.open=true));if('IntersectionObserver' in window){const observer=new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.isIntersecting){document.querySelectorAll('aside a').forEach(link=>link.classList.toggle('active',link.hash===`#${entry.target.id}`))}})},{rootMargin:'-10% 0px -65% 0px'});document.querySelectorAll('section[id]').forEach(section=>observer.observe(section))}
+</script>
+</body>
+</html>

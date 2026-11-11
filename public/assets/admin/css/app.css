@@ -232,6 +232,13 @@ body.app .navbar-sidebar .navbar__list .navbar__sub-list {
   position: relative;
 }
 
+/* A group containing the current route must remain expanded after navigation.
+   This CSS state is authoritative even before JavaScript initializes. */
+body.app .navbar-sidebar .navbar__list > li.has-sub.active > .navbar__sub-list,
+body.app .header-mobile .navbar-mobile__list > li.has-dropdown.active > .navbar-mobile__dropdown {
+  display: block;
+}
+
 body.app .navbar-sidebar .navbar__list .navbar__sub-list::before {
   /* Vertical guide rail, aligned to where the parent icon sits. */
   content: "";
@@ -269,6 +276,28 @@ body.app .navbar-sidebar .navbar__list .navbar__sub-list li.active > a,
 body.app .navbar-sidebar .navbar__list .navbar__sub-list li > a.active {
   background: rgba(var(--m-accent-rgb), 0.14);
   color: #ffffff;
+}
+
+body.app .navbar-sidebar .navbar__list .navbar__sub-list li a > i {
+  width: 16px;
+  margin-right: 8px;
+  text-align: center;
+}
+
+body.app .header-mobile .navbar-mobile .has-dropdown > a.js-arrow::after {
+  content: "\f054";
+  font-family: "Font Awesome 7 Free";
+  font-weight: 900;
+  transition: transform 200ms ease;
+}
+
+body.app .header-mobile .navbar-mobile .has-dropdown > a.js-arrow.open::after {
+  transform: rotate(90deg);
+}
+
+body.app .header-mobile .navbar-mobile__dropdown li.active > a {
+  color: var(--m-accent);
+  font-weight: 600;
 }
 
 /* Optional section heading between groups (markup opt-in). */
@@ -6463,6 +6492,51 @@ body.app .settings-tabs .nav-link.active i {
   color: var(--m-accent);
 }
 
+body.app .setting-field__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--m-text);
+}
+
+body.app .setting-field__icon {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 8px;
+  color: var(--m-accent);
+  background: color-mix(in srgb, var(--m-accent) 10%, transparent);
+}
+
+body.app .setting-field__icon i {
+  font-size: 13px;
+}
+
+body.app .settings-image-preview {
+  min-height: 150px;
+}
+
+body.app .settings-image-preview__image {
+  height: 150px;
+  object-fit: contain;
+  background: var(--m-surface-2);
+}
+
+body.app .settings-image-preview__empty {
+  min-height: 150px;
+  display: flex;
+}
+
+body.app .settings-image-preview__empty[hidden] {
+  display: none !important;
+}
+
+body.app [data-settings-preview-actions][hidden] {
+  display: none !important;
+}
+
 /* Notification toggle rows */
 body.app .notif-grid {
   display: flex;
@@ -7305,7 +7379,8 @@ body.app .cmdk-item__icon {
   bottom: 16px;
   right: 16px;
   z-index: 900;
-  display: flex;
+  /* display: flex; */
+  display: none;
   flex-direction: column;
   align-items: flex-end;
   gap: 10px;

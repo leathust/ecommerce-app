@@ -3,10 +3,9 @@
 @section('content')
   <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
     <div>
-      <h1 class="h3 mb-1">Danh sách liên hệ</h1>
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-1"><h1 class="h3 mb-0">Danh sách liên hệ</h1><span class="badge text-bg-primary">{{ number_format($contacts->total()) }} liên hệ</span></div>
       <p class="text-muted mb-0">Tiếp nhận và theo dõi yêu cầu hỗ trợ từ khách hàng.</p>
     </div>
-    <span class="badge text-bg-primary">{{ $contacts->total() }} liên hệ</span>
   </div>
 
   @if (session('success'))
@@ -111,26 +110,28 @@
                   </details>
                 </td>
                 <td><time datetime="{{ $contact->created_at?->toIso8601String() }}">{{ $contact->created_at?->format('d/m/Y H:i') }}</time></td>
-                <td style="min-width:170px">
+                <td style="width:280px;min-width:280px">
                   @can('contacts.update')
-                    <form action="{{ route('admin.contacts.status.update', $contact) }}" method="POST">
-                      @csrf
-                      @method('PATCH')
-                      <select class="form-select form-select-sm" name="status" onchange="this.form.submit()" aria-label="Trạng thái liên hệ #{{ $contact->id }}">
-                        @foreach ($statuses as $value => $label)
-                          <option value="{{ $value }}" @selected($contact->status === $value)>{{ $label }}</option>
-                        @endforeach
-                      </select>
-                    </form>
-                    @if (filter_var($contact->email, FILTER_VALIDATE_EMAIL))
-                      <button type="button" class="btn btn-sm btn-outline-primary mt-2"
-                        data-bs-toggle="modal" data-bs-target="#contact-reply-modal"
-                        data-reply-action="{{ route('admin.contacts.reply', $contact) }}"
-                        data-reply-email="{{ $contact->email }}"
-                        data-reply-id="{{ $contact->id }}">
-                        <i class="fa-solid fa-reply" aria-hidden="true"></i> Trả lời
-                      </button>
-                    @endif
+                    <div class="d-flex align-items-center gap-2 flex-nowrap">
+                      <form class="mb-0" style="width:170px" action="{{ route('admin.contacts.status.update', $contact) }}" method="POST">
+                        @csrf
+                        @method('PATCH')
+                        <select class="form-select form-select-sm" name="status" onchange="this.form.submit()" aria-label="Trạng thái liên hệ #{{ $contact->id }}">
+                          @foreach ($statuses as $value => $label)
+                            <option value="{{ $value }}" @selected($contact->status === $value)>{{ $label }}</option>
+                          @endforeach
+                        </select>
+                      </form>
+                      @if (filter_var($contact->email, FILTER_VALIDATE_EMAIL))
+                        <button type="button" class="btn btn-sm btn-outline-primary flex-shrink-0"
+                          data-bs-toggle="modal" data-bs-target="#contact-reply-modal"
+                          data-reply-action="{{ route('admin.contacts.reply', $contact) }}"
+                          data-reply-email="{{ $contact->email }}"
+                          data-reply-id="{{ $contact->id }}">
+                          <i class="fa-solid fa-reply" aria-hidden="true"></i> Trả lời
+                        </button>
+                      @endif
+                    </div>
                   @else
                     <span class="badge {{ $statusClass }}">{{ $statuses[$contact->status] ?? $contact->status }}</span>
                   @endcan

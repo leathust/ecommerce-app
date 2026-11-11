@@ -3,6 +3,9 @@
 namespace App\Providers;
 
 use App\Models\User;
+use App\Models\Role;
+use App\Policies\AdminUserPolicy;
+use App\Policies\RolePolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 
@@ -14,7 +17,8 @@ class AuthServiceProvider extends ServiceProvider
      * @var array<class-string, class-string>
      */
     protected $policies = [
-        //
+        User::class => AdminUserPolicy::class,
+        Role::class => RolePolicy::class,
     ];
 
     /**
@@ -23,6 +27,10 @@ class AuthServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::before(function (User $user, string $ability): ?bool {
+            if (! str_contains($ability, '.')) {
+                return null;
+            }
+
             return $user->hasPermission($ability) ? true : null;
         });
     }

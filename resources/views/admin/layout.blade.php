@@ -40,6 +40,7 @@
         </main>
       </div>
     </div>
+    @include('admin.includes.confirm_action_modal')
     @stack('modals')
     <script src="{{ asset('assets/admin/js/vanilla-utils.js') }}"></script>
     <script src="{{ asset('assets/admin/vendor/bootstrap-5.3.8.bundle.min.js') }}"></script>
@@ -47,6 +48,7 @@
     <script src="{{ asset('assets/admin/js/bootstrap5-init.js') }}"></script>
     <script src="{{ asset('assets/admin/js/main-vanilla.js') }}"></script>
     <script src="{{ asset('assets/admin/js/modern-plugins.js') }}"></script>
+    <script src="{{ asset('assets/admin/js/admin-confirm-modal.js') }}"></script>
     @yield('scripts')
   </body>
 </html>
