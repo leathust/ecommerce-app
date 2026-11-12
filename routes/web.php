@@ -20,23 +20,29 @@ use App\Http\Controllers\ElementController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProductImageController;
+use App\Http\Controllers\StorefrontLocaleController;
 use Illuminate\Support\Facades\Route;
 
 // User routes
 Route::get('/media/catalog/{type}/{id}', [CatalogImageController::class, 'show'])->whereIn('type', ['categories', 'brands'])->whereNumber('id')->name('catalog-images.show');
 Route::get('/media/product-images/{image}', [ProductImageController::class, 'show'])->name('product-images.show');
-Route::get('/', [HomeController::class, 'home'])->name('home');
-Route::get('/cart', [HomeController::class, 'cart'])->name('cart');
-Route::get('/shop', [HomeController::class, 'shop'])->name('shop');
-Route::get('/products', [HomeController::class, 'products'])->name('products');
-Route::get('/contact', [ContactController::class, 'create'])->name('contact');
-Route::post('/contact', [ContactController::class, 'store'])
-    ->middleware('throttle:contact-submissions')
-    ->name('contact.store');
-Route::get('/track-order', [HomeController::class, 'trackOrder'])->name('track-order');
-Route::get('/help', [HomeController::class, 'help'])->name('help');
-Route::get('/language', [HomeController::class, 'language'])->name('language');
-Route::get('/account', [HomeController::class, 'account'])->name('account');
+Route::middleware('storefront.locale')->group(function (): void {
+    Route::get('/', [HomeController::class, 'home'])->name('home');
+    Route::get('/cart', [HomeController::class, 'cart'])->name('cart');
+    Route::get('/shop', [HomeController::class, 'shop'])->name('shop');
+    Route::get('/products', [HomeController::class, 'products'])->name('products');
+    Route::get('/contact', [ContactController::class, 'create'])->name('contact');
+    Route::post('/contact', [ContactController::class, 'store'])
+        ->middleware('throttle:contact-submissions')
+        ->name('contact.store');
+    Route::get('/track-order', [HomeController::class, 'trackOrder'])->name('track-order');
+    Route::get('/help', [HomeController::class, 'help'])->name('help');
+    Route::get('/language', [StorefrontLocaleController::class, 'legacyRedirect'])->name('language');
+    Route::post('/language', [StorefrontLocaleController::class, 'update'])
+        ->middleware('throttle:20,1')
+        ->name('language.update');
+    Route::get('/account', [HomeController::class, 'account'])->name('account');
+});
 
 // Admin routes
 Route::prefix('admin')->name('admin.')->group(function (): void {

@@ -16,7 +16,77 @@
   close  && close.addEventListener('click', () => setDrawer(false));
   drawer && drawer.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => setDrawer(false)));
   document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.querySelector('[data-language-menu]:not([hidden])')) return;
     if (e.key === 'Escape' && drawer && drawer.classList.contains('is-open')) setDrawer(false);
+  });
+
+  // Shared language switcher: desktop utility bar and mobile drawer.
+  const languageSwitchers = Array.from(document.querySelectorAll('[data-language-switcher]'));
+  const languageTrigger = (switcher) => switcher.querySelector('[data-language-trigger]');
+  const languageMenu = (switcher) => switcher.querySelector('[data-language-menu]');
+  const languageItems = (switcher) => Array.from(switcher.querySelectorAll('[role="menuitem"]:not([disabled])'));
+  const setLanguageMenu = (switcher, open, focusMenu = false) => {
+    const trigger = languageTrigger(switcher);
+    const menu = languageMenu(switcher);
+    if (!trigger || !menu) return;
+    if (open) {
+      languageSwitchers.forEach((other) => {
+        if (other === switcher) return;
+        const otherTrigger = languageTrigger(other);
+        const otherMenu = languageMenu(other);
+        if (otherTrigger && otherMenu) {
+          otherTrigger.setAttribute('aria-expanded', 'false');
+          otherMenu.hidden = true;
+        }
+      });
+    }
+    trigger.setAttribute('aria-expanded', String(open));
+    menu.hidden = !open;
+    if (open && focusMenu) languageItems(switcher)[0]?.focus();
+  };
+
+  languageSwitchers.forEach((switcher) => {
+    const trigger = languageTrigger(switcher);
+    const menu = languageMenu(switcher);
+    if (!trigger || !menu) return;
+    trigger.addEventListener('click', () => setLanguageMenu(switcher, menu.hidden));
+    trigger.addEventListener('keydown', (event) => {
+      if (!['ArrowDown', 'ArrowUp'].includes(event.key)) return;
+      event.preventDefault();
+      setLanguageMenu(switcher, true, true);
+      if (event.key === 'ArrowUp') languageItems(switcher).at(-1)?.focus();
+    });
+    menu.addEventListener('keydown', (event) => {
+      const items = languageItems(switcher);
+      const index = items.indexOf(document.activeElement);
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setLanguageMenu(switcher, false);
+        trigger.focus();
+      } else if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key) && items.length) {
+        event.preventDefault();
+        const nextIndex = event.key === 'Home' ? 0
+          : event.key === 'End' ? items.length - 1
+            : event.key === 'ArrowDown' ? (index + 1 + items.length) % items.length
+              : (index - 1 + items.length) % items.length;
+        items[nextIndex].focus();
+      }
+    });
+  });
+
+  document.addEventListener('click', (event) => {
+    languageSwitchers.forEach((switcher) => {
+      if (!switcher.contains(event.target)) setLanguageMenu(switcher, false);
+    });
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return;
+    const openSwitcher = languageSwitchers.find((switcher) => !languageMenu(switcher)?.hidden);
+    if (!openSwitcher) return;
+    event.preventDefault();
+    setLanguageMenu(openSwitcher, false);
+    languageTrigger(openSwitcher)?.focus();
   });
 
   // Recursive desktop dropdowns: click/touch, viewport direction and keyboard Escape.

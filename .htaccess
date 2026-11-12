@@ -9,6 +9,11 @@
     RewriteCond %{THE_REQUEST} \s/+(.*/)?public(?:[/\s?]) [NC]
     RewriteRule ^public(?:/(.*))?$ $1 [R=301,L,NE]
 
+    # Expose only Laravel's public disk through the public/storage junction.
+    # This must run before the source-directory deny rule below; it never maps
+    # the URL to the private project storage directory itself.
+    RewriteRule ^storage(?:/(.*))?$ public/storage/$1 [L,NE]
+
     # Never expose Laravel source, dependencies, tests, runtime data or docs.
     RewriteRule ^(?:app|bootstrap|config|database|docs|resources|routes|storage|tests|vendor)(?:/|$) - [F,L,NC]
 

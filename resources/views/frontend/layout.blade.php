@@ -49,14 +49,14 @@
   <div class="utility">
     <div class="container">
       <span class="promo">
-        <span class="tag">SALE</span>
-        Free shipping on orders over $50 · 30-day returns
+        <span class="tag">{{ __('frontend.Sale') }}</span>
+        {{ __('frontend.Free shipping on orders over $50 · 30-day returns') }}
       </span>
-      <span class="links">
-        <a href="{{ Route('track-order') }}">Track order</a>
-        <a href="{{ Route('help') }}">Help</a>
-        <a href="{{ Route('language') }}">EN · USD</a>
-      </span>
+      <div class="links">
+        <a href="{{ Route('track-order') }}">{{ __('frontend.Track order') }}</a>
+        <a href="{{ Route('help') }}">{{ __('frontend.Help') }}</a>
+        @include('frontend.includes.language-switcher', ['variant' => 'desktop'])
+      </div>
     </div>
   </div>
 
@@ -87,6 +87,7 @@
       <button class="drawer-close" aria-label="Close menu">Close ✕</button>
     </div>
     @include('frontend.includes.menu-mobile')
+    @include('frontend.includes.language-switcher', ['variant' => 'mobile'])
     <a href="{{ Route('cart') }}" class="btn btn--indigo" style="margin-top:var(--s5); justify-content:center">View cart →</a>
   </div>
 

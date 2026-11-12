@@ -303,12 +303,14 @@ RewriteRule PATTERN SUBSTITUTION [FLAGS]</code></pre>
 <h3>3. Các nhóm rule tại gốc project</h3>
 <pre><code>Options -MultiViews -Indexes
 
+RewriteRule ^storage(?:/(.*))?$ public/storage/$1 [L,NE]
 RewriteRule ^(?:app|bootstrap|config|database|docs|resources|routes|storage|tests|vendor)(?:/|$) - [F,L,NC]
 
 RewriteRule ^public(?:/|$) - [L]
 RewriteRule ^$ public/ [L]
 RewriteRule ^(.+)$ public/$1 [L]</code></pre>
-<ul><li><code>-Indexes</code>: không liệt kê nội dung thư mục khi không có index. Không ngăn việc tải một file cụ thể nếu file đó được cho phép.</li><li><code>-MultiViews</code>: tránh cơ chế content negotiation tự chọn file gần tên, gây xung đột router/rewrite.</li><li>Danh sách thư mục dùng <code>(?:/|$)</code> để chặn đúng thư mục hoặc phần con; tránh nhầm một tên chỉ có cùng tiền tố.</li><li>Rule <code>^public</code> giúp không tiếp tục gắn thêm public ở lượt xử lý đường dẫn đã vào public.</li><li>Trang gốc được đưa vào <code>public/</code>, các đường dẫn còn lại được đưa vào <code>public/$1</code>.</li></ul>
+<p class="note warn">Trong file thật, rule <code>^storage</code> ánh xạ sang <code>public/storage</code> phải đứng trước rule chặn source có chứa <code>storage</code>. Đích là Junction public của Laravel, không phải private <code>storage/</code> tại gốc project. Nếu đảo thứ tự, ảnh upload tồn tại trên disk nhưng URL sạch sẽ bị Apache trả 403.</p>
+<ul><li><code>-Indexes</code>: không liệt kê nội dung thư mục khi không có index. Không ngăn việc tải một file cụ thể nếu file đó được cho phép.</li><li><code>-MultiViews</code>: tránh cơ chế content negotiation tự chọn file gần tên, gây xung đột router/rewrite.</li><li>Danh sách thư mục dùng <code>(?:/|$)</code> để chặn đúng thư mục hoặc phần con; tránh nhầm một tên chỉ có cùng tiền tố.</li><li>Rule public storage chỉ mở nội dung nằm dưới disk <code>storage/app/public</code> thông qua <code>public/storage</code>; private logs/cache không được ánh xạ.</li><li>Rule <code>^public</code> giúp không tiếp tục gắn thêm public ở lượt xử lý đường dẫn đã vào public.</li><li>Trang gốc được đưa vào <code>public/</code>, các đường dẫn còn lại được đưa vào <code>public/$1</code>.</li></ul>
 <details><summary>Chặn file nhạy cảm bằng FilesMatch</summary>
 <pre><code>&lt;FilesMatch "^\."&gt;
     Require all denied
@@ -355,12 +357,13 @@ Options -Indexes
 curl.exe -I http://localhost/ecommerce-app/
 curl.exe -I http://localhost/ecommerce-app/public/shop
 curl.exe -I http://localhost/ecommerce-app/assets/admin/css/app.css
+curl.exe -I http://localhost/ecommerce-app/storage/system-settings/logo/example.jpg
 curl.exe -I http://localhost/ecommerce-app/.env
 curl.exe -I http://localhost/ecommerce-app/vendor/autoload.php</code></pre>
 <table><tr><th>Kết quả</th><th>Điều cần hiểu</th></tr><tr><td>Trang chủ / asset 200</td><td>Request thông thường được phục vụ</td></tr><tr><td>/public/shop 301</td><td>Kiểm tra Location là /ecommerce-app/shop, không chứa C:/xampp hay lặp public</td></tr><tr><td>.env / vendor 403</td><td>Những đường dẫn được kiểm tra đã bị chặn; không chứng minh mọi đường dẫn đều an toàn</td></tr><tr><td>500 Apache</td><td>Xem Apache error.log: directive không hợp lệ/không được phép, handler hoặc rewrite loop</td></tr><tr><td>Rule không có tác dụng</td><td>Kiểm tra AllowOverride, module, đúng DocumentRoot và đúng file .htaccess</td></tr><tr><td>Redirect cũ vẫn lặp</td><td>301 có thể được browser cache; dùng curl hoặc cửa sổ riêng tư để kiểm tra</td></tr></table>
 <p class="note">httpd -t không thay cho request thực tế để phát hiện mọi lỗi .htaccess được đọc khi xử lý thư mục. Thay file .htaccess thường áp dụng ở request sau; sửa cấu hình Apache chính thường cần reload/restart. Xóa cache Laravel không sửa được lỗi cấu hình Apache.</p>
 <h3>9. Giới hạn của cách triển khai hiện tại</h3>
-<p>Root project vẫn ở trong vùng Apache có thể phục vụ, nên cần rule chặn và phải rà khi thêm thư mục/file mới. Rule chặn storage hiện cũng ngăn cách truy cập trực tiếp /storage theo URL sạch, cần thiết kế lại nếu sau này phục vụ public uploads. File HTML này nằm trong docs bị chặn qua HTTP; mở bằng file local để học.</p>
+<p>Root project vẫn ở trong vùng Apache có thể phục vụ, nên cần rule chặn và phải rà khi thêm thư mục/file mới. URL sạch <code>/storage/*</code> hiện chỉ được ánh xạ vào Junction <code>public/storage</code>; private source storage, logs và cache không được phục vụ. File HTML này nằm trong docs bị chặn qua HTTP; mở bằng file local để học.</p>
 <p>DocumentRoot trỏ thẳng public giúp giảm phần source nằm trong web root. Khi chuyển cách triển khai, cần rà các redirect /public và đoạn chuẩn hóa base path riêng, không copy nguyên cấu hình local mà không kiểm tra. .htaccess không áp dụng cho Nginx hay PHP development server như Apache.</p>
 <details><summary>Ôn tập nhanh: hãy tự giải thích trước khi mở</summary><ol><li><b>Vì sao [L] chưa chắc chấm dứt mọi rewrite?</b> Nó dừng lượt hiện tại; ánh xạ nội bộ có thể làm Apache xử lý lại theo thư mục.</li><li><b>Tại sao asset tồn tại không cần Laravel controller?</b> Điều kiện !-f không đạt nên rule front controller không chạy.</li><li><b>Vì sao chỉ đổi APP_URL chưa bỏ được /public?</b> APP_URL là cấu hình ứng dụng; Apache mới ánh xạ URL vào filesystem.</li><li><b>403 từ Apache khác 403 middleware?</b> Apache có thể từ chối trước Laravel; middleware từ chối sau khi request đã vào ứng dụng.</li></ol></details>
 <p class="muted">Tham khảo chính thức: <a href="https://httpd.apache.org/docs/2.4/howto/htaccess.html" target="_blank" rel="noopener noreferrer">Apache .htaccess</a> và <a href="https://httpd.apache.org/docs/2.4/rewrite/flags.html" target="_blank" rel="noopener noreferrer">RewriteRule flags</a>. Nội dung mô tả cấu hình project tại thời điểm viết, không tự thay đổi cấu hình server.</p>

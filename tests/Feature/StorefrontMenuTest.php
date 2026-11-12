@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Menu;
 use App\Services\MenuService;
+use App\Support\StorefrontLocaleResolver;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -66,11 +67,12 @@ class StorefrontMenuTest extends TestCase
 
     public function test_locale_selection_and_label_fallback_are_applied_to_both_renderers(): void
     {
-        $this->app->setLocale('en');
         $this->menu(['name_vi' => 'Trang chủ', 'name_en' => 'Homepage', 'link_type' => 'route', 'route_name' => 'home']);
         $this->menu(['name_vi' => 'Chỉ tiếng Việt', 'name_en' => '', 'link_type' => 'route', 'route_name' => 'contact']);
 
-        $response = $this->get(route('home'));
+        $response = $this
+            ->withSession([StorefrontLocaleResolver::SESSION_KEY => 'en'])
+            ->get(route('home'));
 
         $response->assertOk()->assertSee('Homepage')->assertSee('Chỉ tiếng Việt');
         $this->assertSame(2, substr_count($response->getContent(), 'Homepage'));

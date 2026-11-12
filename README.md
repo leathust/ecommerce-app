@@ -131,7 +131,7 @@ php artisan optimize:clear
 
 Project hiện dùng `.htaccess` tại thư mục gốc để rewrite vào `public`, giúp URL không chứa `/public`. Assets vẫn nằm trong `public/assets` và được gọi bằng `asset('assets/...')`.
 
-- `.htaccess` gốc chặn truy cập các thư mục source và file nhạy cảm, tắt directory listing và thêm security headers.
+- `.htaccess` gốc rewrite `/storage/*` vào đúng Junction `public/storage`, sau đó chặn truy cập các thư mục source và file nhạy cảm, tắt directory listing và thêm security headers. Rule public storage phải đứng trước rule chặn thư mục `storage`.
 - `public/.htaccess` chuyển request trực tiếp có `/public` về URL sạch.
 - `public/assets/.htaccess` chặn thực thi script phía server trong assets.
 - `public/index.php` có xử lý base path cho cách triển khai dưới thư mục con.
@@ -212,7 +212,7 @@ php artisan optimize:clear
 
 Không cần migration bổ sung cho settings: `setting_key` đã có unique index phục vụ lookup và chống trùng; `updated_by` cùng `updated_at` đủ cho metadata cập nhật. Khi rollback một bản phát hành, sao lưu database/storage trước, đưa code về phiên bản tương thích rồi chạy lại `settings:check`; không dùng `migrate:fresh`. Nếu registry cũ chưa biết key mới, key đó chỉ được báo là “không thuộc registry” và vẫn được giữ nguyên.
 
-Ảnh logo/favicon/OG nằm trên disk `public` dưới `system-settings/*`; symlink `public/storage` phải tồn tại để trình duyệt truy cập. Sau khi đổi registry/config hoặc gặp cache cũ, dùng `php artisan optimize:clear`; thao tác lưu trong admin và seeder đều tự xóa cache typed settings.
+Ảnh logo/favicon/OG nằm trên disk `public` dưới `system-settings/*`; symlink/Junction `public/storage` phải tồn tại để trình duyệt truy cập. Với cách bỏ `/public` hiện tại, `.htaccess` gốc ánh xạ URL sạch `/storage/*` sang `public/storage/*` trước khi áp dụng rule chặn private `storage`. Sau khi đổi registry/config hoặc gặp cache cũ, dùng `php artisan optimize:clear`; thao tác lưu trong admin và seeder đều tự xóa cache typed settings.
 
 `RolePermissionSeeder` tạo/cập nhật 5 role và 29 permission. Seeder đồng bộ lại quyền của các role mẫu bằng `sync`, vì vậy chạy lại sẽ thay đổi các chỉnh sửa quyền thủ công trên những role này theo ma trận trong seeder.
 

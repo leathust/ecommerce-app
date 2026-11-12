@@ -42,11 +42,6 @@ class HomeController extends Controller
         return view('frontend.help');
     }
 
-    public function language()
-    {
-        return view('frontend.language');
-    }
-
     public function account()
     {
         return view('frontend.account');

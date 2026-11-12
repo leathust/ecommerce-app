@@ -8,6 +8,7 @@ use App\Models\Setting;
 use App\Models\User;
 use App\Services\SystemSettingService;
 use App\Support\MoneyFormatter;
+use App\Support\StorefrontLocaleResolver;
 use App\Support\SystemSettingPresenter;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -48,7 +49,6 @@ class SystemSettingConsumerTest extends TestCase
 
     public function test_storefront_uses_english_values_and_falls_back_safely(): void
     {
-        App::setLocale('en');
         $this->settings([
             'site.name_vi' => 'Tên dự phòng',
             'site.name_en' => 'English Store',
@@ -56,7 +56,8 @@ class SystemSettingConsumerTest extends TestCase
             'contact.address_en' => '',
         ]);
 
-        $this->get(route('contact'))
+        $this->withSession([StorefrontLocaleResolver::SESSION_KEY => 'en'])
+            ->get(route('contact'))
             ->assertOk()
             ->assertSee('<html lang="en">', false)
             ->assertSee('English Store')
