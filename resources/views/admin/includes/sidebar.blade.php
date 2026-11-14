@@ -88,6 +88,12 @@
           </li>
         @endcan
 
+        @can('banners.view')
+          <li class="{{ request()->routeIs('admin.home-banners.*') ? 'active' : '' }}">
+            <a href="{{ route('admin.home-banners.index') }}"><i class="fa-solid fa-images"></i>Banner trang chủ</a>
+          </li>
+        @endcan
+
         @can('dashboard.view')
           @php($templateMenuActive = request()->routeIs('admin.charts', 'admin.tables*', 'admin.data-tables', 'admin.forms.*', 'admin.calendar', 'admin.maps', 'admin.inbox', 'admin.kanban', 'admin.notifications', 'admin.documentation'))
           <li class="{{ $templateMenuActive ? 'active' : '' }} has-sub">

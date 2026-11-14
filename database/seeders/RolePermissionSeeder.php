@@ -14,7 +14,10 @@ class RolePermissionSeeder extends Seeder
      */
     public function run(): void
     {
-        $menuPermissionNames = ['menus.view', 'menus.create', 'menus.update', 'menus.delete'];
+        $addonPermissionNames = [
+            'menus.view', 'menus.create', 'menus.update', 'menus.delete',
+            'banners.view', 'banners.create', 'banners.update', 'banners.delete',
+        ];
         $permissions = [
             'dashboard.view' => 'Xem trang tổng quan quản trị',
             'products.view' => 'Xem sản phẩm',
@@ -50,6 +53,10 @@ class RolePermissionSeeder extends Seeder
             'menus.create' => 'Tạo menu website',
             'menus.update' => 'Cập nhật và sắp xếp menu website',
             'menus.delete' => 'Xóa menu website',
+            'banners.view' => 'Xem banner trang chủ',
+            'banners.create' => 'Tạo banner trang chủ',
+            'banners.update' => 'Cập nhật banner trang chủ',
+            'banners.delete' => 'Xóa banner trang chủ',
         ];
 
         $roles = [
@@ -71,6 +78,7 @@ class RolePermissionSeeder extends Seeder
                     'roles.view', 'audit.view',
                     'settings.view', 'settings.update',
                     'menus.view', 'menus.create', 'menus.update', 'menus.delete',
+                    'banners.view', 'banners.create', 'banners.update', 'banners.delete',
                 ],
             ],
             'catalog_manager' => [
@@ -81,6 +89,7 @@ class RolePermissionSeeder extends Seeder
                     'categories.view', 'categories.create', 'categories.update', 'categories.delete',
                     'brands.view', 'brands.create', 'brands.update', 'brands.delete',
                     'menus.view', 'menus.create', 'menus.update', 'menus.delete',
+                    'banners.view', 'banners.create', 'banners.update', 'banners.delete',
                 ],
             ],
             'order_manager' => [
@@ -102,7 +111,7 @@ class RolePermissionSeeder extends Seeder
             ],
         ];
 
-        DB::transaction(function () use ($permissions, $roles, $menuPermissionNames): void {
+        DB::transaction(function () use ($permissions, $roles, $addonPermissionNames): void {
             $permissionModels = collect($permissions)->mapWithKeys(
                 fn (string $description, string $name) => [
                     $name => Permission::updateOrCreate(
@@ -127,15 +136,18 @@ class RolePermissionSeeder extends Seeder
                         $permissionModels->only($definition['permissions'])->pluck('id')->all(),
                     );
                 } else {
-                    $menuPermissions = array_values(array_intersect($definition['permissions'], $menuPermissionNames));
-                    $previousDefaults = array_values(array_diff($definition['permissions'], $menuPermissionNames));
                     $currentPermissions = $role->permissions()->pluck('name')->sort()->values()->all();
-                    sort($previousDefaults);
-                    $alreadyHasMenuPermissions = array_intersect($currentPermissions, $menuPermissionNames) !== [];
+                    $desiredPermissions = $definition['permissions'];
+                    $missingAddons = array_values(array_diff(
+                        array_intersect($desiredPermissions, $addonPermissionNames),
+                        $currentPermissions,
+                    ));
+                    $expectedBefore = array_values(array_diff($desiredPermissions, $missingAddons));
+                    sort($expectedBefore);
 
-                    if (! $alreadyHasMenuPermissions && $currentPermissions === $previousDefaults) {
+                    if ($missingAddons !== [] && $currentPermissions === $expectedBefore) {
                         $role->permissions()->syncWithoutDetaching(
-                            $permissionModels->only($menuPermissions)->pluck('id')->all(),
+                            $permissionModels->only($missingAddons)->pluck('id')->all(),
                         );
                     }
                 }

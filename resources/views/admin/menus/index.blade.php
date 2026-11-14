@@ -46,6 +46,12 @@
   </section>
 
   @can('menus.update')
+    <script type="application/json" id="menu-move-catalog" data-max-depth="{{ config('menus.max_depth', 4) }}">@json($moveCatalog)</script>
+  @endcan
+@endsection
+
+@push('modals')
+  @can('menus.update')
     <div class="modal fade" id="menu-move-modal" tabindex="-1" aria-labelledby="menu-move-title" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -66,9 +72,8 @@
         </div>
       </div>
     </div>
-    <script type="application/json" id="menu-move-catalog" data-max-depth="{{ config('menus.max_depth', 4) }}">@json($moveCatalog)</script>
   @endcan
-@endsection
+@endpush
 
 @section('scripts')
   <script src="{{ asset('assets/admin/js/menu-manager.js') }}"></script>

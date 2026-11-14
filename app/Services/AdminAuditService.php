@@ -27,6 +27,7 @@ class AdminAuditService
         'items',
         'location',
         'parent_id',
+        'banner',
     ];
 
     private const SENSITIVE_KEY_PARTS = [

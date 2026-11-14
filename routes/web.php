@@ -8,6 +8,7 @@ use App\Http\Controllers\AdminCategoryController;
 use App\Http\Controllers\AdminContactController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminCustomerController;
+use App\Http\Controllers\AdminHomeBannerController;
 use App\Http\Controllers\AdminMenuController;
 use App\Http\Controllers\AdminOrderController;
 use App\Http\Controllers\AdminProductController;
@@ -15,22 +16,61 @@ use App\Http\Controllers\AdminRoleController;
 use App\Http\Controllers\AdminSystemSettingController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\CatalogImageController;
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ElementController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProductImageController;
 use App\Http\Controllers\StorefrontLocaleController;
+use App\Http\Controllers\StorefrontAuthController;
+use App\Http\Controllers\StorefrontHomeProductController;
+use App\Http\Controllers\StorefrontProfileController;
+use App\Http\Controllers\WishlistController;
+use App\Models\Product;
 use Illuminate\Support\Facades\Route;
 
 // User routes
 Route::get('/media/catalog/{type}/{id}', [CatalogImageController::class, 'show'])->whereIn('type', ['categories', 'brands'])->whereNumber('id')->name('catalog-images.show');
 Route::get('/media/product-images/{image}', [ProductImageController::class, 'show'])->name('product-images.show');
 Route::middleware('storefront.locale')->group(function (): void {
+    Route::bind('storefrontProduct', fn (string $slug): Product => Product::query()->published()->where('slug', $slug)->firstOrFail());
     Route::get('/', [HomeController::class, 'home'])->name('home');
-    Route::get('/cart', [HomeController::class, 'cart'])->name('cart');
+    Route::get('/login', [StorefrontAuthController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [StorefrontAuthController::class, 'login'])->name('login.submit');
+    Route::post('/logout', [StorefrontAuthController::class, 'logout'])
+        ->middleware(['auth', 'customer'])
+        ->name('logout');
+    Route::middleware(['auth', 'customer', 'throttle:wishlist-mutations'])->group(function (): void {
+        Route::post('/wishlist/{storefrontProduct}', [WishlistController::class, 'store'])
+            ->name('wishlist.store');
+        Route::delete('/wishlist/{product}', [WishlistController::class, 'destroy'])
+            ->name('wishlist.destroy');
+    });
+    Route::get('/wishlist', [WishlistController::class, 'index'])
+        ->middleware(['auth', 'customer'])
+        ->name('wishlist.index');
+    Route::post('/newsletter/subscribe', [NewsletterController::class, 'store'])
+        ->middleware('throttle:newsletter-subscriptions')
+        ->name('newsletter.subscribe');
+    Route::get('/home/trending/{category}', StorefrontHomeProductController::class)
+        ->middleware('throttle:60,1')
+        ->name('home.trending');
+    Route::get('/cart', [CartController::class, 'index'])->name('cart');
+    Route::middleware('throttle:cart-mutations')->group(function (): void {
+        Route::post('/cart/items/{storefrontProduct}', [CartController::class, 'store'])
+            ->name('cart.items.store');
+        Route::patch('/cart/items/{product}', [CartController::class, 'update'])
+            ->name('cart.items.update');
+        Route::delete('/cart/items/{product}', [CartController::class, 'destroy'])
+            ->name('cart.items.destroy');
+        Route::delete('/cart', [CartController::class, 'clear'])
+            ->name('cart.clear');
+    });
     Route::get('/shop', [HomeController::class, 'shop'])->name('shop');
     Route::get('/products', [HomeController::class, 'products'])->name('products');
+    Route::get('/products/{storefrontProduct:slug}', [HomeController::class, 'product'])->name('products.show');
     Route::get('/contact', [ContactController::class, 'create'])->name('contact');
     Route::post('/contact', [ContactController::class, 'store'])
         ->middleware('throttle:contact-submissions')
@@ -41,7 +81,16 @@ Route::middleware('storefront.locale')->group(function (): void {
     Route::post('/language', [StorefrontLocaleController::class, 'update'])
         ->middleware('throttle:20,1')
         ->name('language.update');
-    Route::get('/account', [HomeController::class, 'account'])->name('account');
+    Route::middleware(['auth', 'customer'])->group(function (): void {
+        Route::get('/account', [StorefrontProfileController::class, 'show'])->name('account');
+
+        Route::middleware('throttle:profile-mutations')->group(function (): void {
+            Route::patch('/account/profile', [StorefrontProfileController::class, 'updateProfile'])
+                ->name('storefront.profile.update');
+            Route::put('/account/password', [StorefrontProfileController::class, 'updatePassword'])
+                ->name('storefront.password.update');
+        });
+    });
 });
 
 // Admin routes
@@ -75,6 +124,12 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
         Route::patch('menus/reorder', [AdminMenuController::class, 'reorder'])->middleware('permission:menus.update')->name('menus.reorder');
         Route::patch('menus/{menu}/status', [AdminMenuController::class, 'updateStatus'])->middleware('permission:menus.update')->name('menus.status.update');
         Route::delete('menus/{menu}', [AdminMenuController::class, 'destroy'])->middleware('permission:menus.delete')->name('menus.destroy');
+        Route::get('home-banners', [AdminHomeBannerController::class, 'index'])->middleware('permission:banners.view')->name('home-banners.index');
+        Route::get('home-banners/create', [AdminHomeBannerController::class, 'create'])->middleware('permission:banners.create')->name('home-banners.create');
+        Route::post('home-banners', [AdminHomeBannerController::class, 'store'])->middleware('permission:banners.create')->name('home-banners.store');
+        Route::get('home-banners/{homeBanner}/edit', [AdminHomeBannerController::class, 'edit'])->middleware('permission:banners.update')->name('home-banners.edit');
+        Route::put('home-banners/{homeBanner}', [AdminHomeBannerController::class, 'update'])->middleware('permission:banners.update')->name('home-banners.update');
+        Route::delete('home-banners/{homeBanner}', [AdminHomeBannerController::class, 'destroy'])->middleware('permission:banners.delete')->name('home-banners.destroy');
 
         Route::middleware('permission:dashboard.view')->group(function (): void {
             Route::get('dashboard', [AdminController::class, 'dashboard'])->name('dashboard');

@@ -44,7 +44,8 @@ class SystemSettingConsumerTest extends TestCase
             ->assertSee('/storage/system-settings/favicon/site.ico', false)
             ->assertSee('hotro@example.com')
             ->assertSee('0901 234 567')
-            ->assertSee('12 Đường Mẫu');
+            ->assertSee('12 Đường Mẫu')
+            ->assertSee('© '.now()->year.' Cửa hàng Việt · Bảo lưu mọi quyền');
     }
 
     public function test_storefront_uses_english_values_and_falls_back_safely(): void
@@ -62,6 +63,7 @@ class SystemSettingConsumerTest extends TestCase
             ->assertSee('<html lang="en">', false)
             ->assertSee('English Store')
             ->assertSee('Địa chỉ dự phòng')
+            ->assertSee('© '.now()->year.' English Store · All rights reserved')
             ->assertDontSee('support@sprylo.example');
     }
 

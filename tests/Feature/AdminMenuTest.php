@@ -51,6 +51,24 @@ class AdminMenuTest extends TestCase
             ->assertOk()->assertDontSee(route('admin.menus.index'), false);
     }
 
+    public function test_move_modal_is_rendered_at_body_level_above_the_bootstrap_backdrop(): void
+    {
+        $actor = $this->userWithRole('admin');
+        $this->menu(['name_vi' => 'Menu di chuyển', 'name_en' => 'Move menu']);
+
+        $html = $this->actingAs($actor)->get(route('admin.menus.index'))->assertOk()->getContent();
+        $mainClose = strpos($html, '</main>');
+        $modal = strpos($html, 'id="menu-move-modal"');
+        $bootstrapScript = strpos($html, 'bootstrap-5.3.8.bundle.min.js');
+
+        $this->assertNotFalse($mainClose);
+        $this->assertNotFalse($modal);
+        $this->assertNotFalse($bootstrapScript);
+        $this->assertGreaterThan($mainClose, $modal, 'Move modal must not be nested in the main stacking context.');
+        $this->assertLessThan($bootstrapScript, $modal, 'Move modal must exist before Bootstrap initializes.');
+        $this->assertSame(1, substr_count($html, 'id="menu-move-modal"'));
+    }
+
     public function test_tree_list_filters_searches_and_paginates_roots_without_splitting_children(): void
     {
         $actor = $this->userWithRole('admin');

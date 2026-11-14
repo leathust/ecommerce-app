@@ -3,13 +3,16 @@
     <div class="container">
       <div class="footer-grid">
         <div class="footer-brand">
-          <div class="mark">
-            @if($storefrontSettings['logo_url'])
-              <img src="{{ $storefrontSettings['logo_url'] }}" alt="{{ $storefrontSettings['name'] }}" style="max-width:170px;max-height:48px;object-fit:contain">
-            @else
-              <span class="brand-mark">{{ $storefrontSettings['initial'] }}</span> {{ $storefrontSettings['name'] }}
-            @endif
-          </div>
+          <a href="{{ Route('home') }}" class="mark">
+            {{-- <div class="mark"> --}}
+              @if($storefrontSettings['logo_url'])
+                <img src="{{ $storefrontSettings['logo_url'] }}" alt="">
+              @else
+                <span class="brand-mark" aria-hidden="true">{{ $storefrontSettings['initial'] }}</span>
+              @endif
+              <span class="footer-brand__name">{{ $storefrontSettings['name'] }}</span>
+            {{-- </div> --}}
+          </a>
           @if($storefrontSettings['tagline'])<p>{{ $storefrontSettings['tagline'] }}</p>@endif
           @if($storefrontSettings['social'])
             <div class="socials" style="margin-top:var(--s4)">
@@ -24,8 +27,7 @@
         @include('frontend.includes.menu-footer')
       </div>
       <div class="footer-bottom">
-        <span>© {{ now()->year }} {{ $storefrontSettings['name'] }} · All rights reserved</span>
-        <span>Free HTML template · No framework · No build step</span>
+        <span>{{ __('frontend.footer.copyright', ['year' => now()->year, 'name' => $storefrontSettings['name']]) }}</span>
       </div>
     </div>
   </footer>

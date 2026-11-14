@@ -67,10 +67,14 @@
     <div class="container">
       <a href="{{ Route('shop') }}" class="all-cats">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-        All Categories
+        {{ __('frontend.header.all_categories') }}
       </a>
       @include('frontend.includes.menu-desktop')
-      <span class="nav-cta">UP TO <strong>60% OFF</strong> ALL ITEMS</span>
+      <span class="nav-cta">
+        {{ __('frontend.header.promotion_prefix') }}
+        <strong>{{ __('frontend.header.promotion_highlight') }}</strong>
+        {{ __('frontend.header.promotion_suffix') }}
+      </span>
     </div>
   </nav>
 
@@ -96,6 +100,24 @@
 
 
   @include('frontend.includes.footer')
+  <div
+    class="wishlist-feedback"
+    data-wishlist-feedback
+    data-error-message="{{ __('frontend.wishlist.request_error') }}"
+    role="status"
+    aria-live="polite"
+    aria-atomic="true"
+    hidden
+  ></div>
+  <div
+    class="wishlist-feedback cart-feedback"
+    data-cart-feedback
+    data-error-message="{{ __('frontend.cart.request_error') }}"
+    role="status"
+    aria-live="polite"
+    aria-atomic="true"
+    hidden
+  ></div>
   <script src="{{ asset('assets/frontend/js/main.js') }}?v={{ time() }}" defer></script>
 </body>
 </html>

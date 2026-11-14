@@ -41,7 +41,27 @@ Assets hiện được phục vụ trực tiếp từ `public/assets`, không c�
 
 ### Các phần đang ở mức giao diện
 
-Trang sản phẩm, đơn hàng và khách hàng trong admin hiện là trang khung, chưa có CRUD nghiệp vụ. Các trang dashboard, giỏ hàng, theo dõi đơn hàng, đăng ký, quên mật khẩu và nhiều trang template chưa đại diện cho một hệ thống bán hàng hoàn chỉnh. Chưa có thanh toán, checkout, upload file liên hệ hoặc gửi thông báo tự động khi khách tạo contact.
+Một số trang storefront như theo dõi đơn hàng, đăng ký và quên mật khẩu vẫn chưa đại diện cho luồng thương mại điện tử hoàn chỉnh. Cart và Wishlist đã dùng backend thật, nhưng chưa có checkout, payment gateway, stock reservation, upload file liên hệ hoặc gửi thông báo tự động khi khách tạo contact.
+
+### Wishlist storefront
+
+- Customer active đã đăng nhập có thể thêm/xóa sản phẩm yêu thích và xem danh sách phân trang.
+- Dữ liệu scope theo owner; guest, admin và customer inactive không được truy cập.
+- Nút tim dùng AJAX server-confirmed, cập nhật badge và đồng bộ tab hỗ trợ `BroadcastChannel`; form CSRF vẫn hoạt động khi tắt JavaScript.
+- Product/category inactive bị ẩn khỏi danh sách và badge nhưng row được giữ; xóa user/product sẽ cascade row Wishlist.
+- Factory test không được gọi từ `DatabaseSeeder`; project không tự seed dữ liệu Wishlist cá nhân.
+
+Chi tiết deploy, rollback và troubleshooting: [docs/wishlist-operations.md](docs/wishlist-operations.md).
+
+### Cart storefront
+
+- Guest dùng cookie token bảo mật (database chỉ lưu SHA-256); customer active có một Cart theo `user_id` và Cart guest được merge khi đăng nhập.
+- Add/update/remove/clear chạy AJAX server-confirmed, đồng bộ badge, totals và empty state; form CSRF vẫn hoạt động khi tắt JavaScript.
+- Cart dùng giá/tồn kho catalog hiện tại, cap mỗi dòng theo `min(stock, 99)` và không giữ hoặc trừ tồn kho.
+- Product/category inactive hoặc hết hàng không được tính vào totals nhưng dòng cũ vẫn có thể xóa.
+- Factory test không được gọi từ `DatabaseSeeder`; project không tự seed Cart cá nhân hoặc chạy cleanup guest Cart mặc định.
+
+Chi tiết token, merge, deploy, rollback, cleanup và troubleshooting: [docs/cart-operations.md](docs/cart-operations.md).
 
 ## 3. Cấu trúc thư mục
 

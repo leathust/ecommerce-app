@@ -18,6 +18,11 @@ return [
         'passwords' => 'users',
     ],
 
+    'storefront_login' => [
+        'max_attempts' => 5,
+        'decay_seconds' => 60,
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Authentication Guards

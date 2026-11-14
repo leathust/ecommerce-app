@@ -1,176 +1,62 @@
 @extends('frontend.layout')
 
 @section('content')
-  <main id="main">
-
+  <main id="main" data-catalog-shop data-shop-url="{{ route('shop') }}">
     <section class="page-head">
       <div class="container">
-        <div class="crumbs"><a href="index.html">Home</a> <span class="sep">›</span> <span>Shop · All products</span></div>
-        <h1>All Products</h1>
-        <p>314 products across smartphones, laptops, audio, cameras, wearables, and gaming. Use the filters on the left to narrow down by brand, price, rating, or availability.</p>
+        <div class="crumbs"><a href="{{ route('home') }}">{{ __('frontend.catalog.home') }}</a> <span class="sep">›</span> <span>{{ __('frontend.catalog.shop') }}</span></div>
+        <h1>{{ __('frontend.catalog.all_products') }}</h1>
+        <p>{{ __('frontend.catalog.shop_intro') }}</p>
       </div>
     </section>
-
     <section class="section">
       <div class="container">
         <div class="shop-layout">
-
-          <aside class="filters" aria-label="Filters">
-            <div class="filter-block">
-              <h3>Category</h3>
-              <label><input type="checkbox" checked> Smartphones <span class="ct">76</span></label>
-              <label><input type="checkbox"> Laptops &amp; Desktops <span class="ct">42</span></label>
-              <label><input type="checkbox"> Smart Watches <span class="ct">28</span></label>
-              <label><input type="checkbox"> Cameras <span class="ct">42</span></label>
-              <label><input type="checkbox"> Headphones &amp; Buds <span class="ct">35</span></label>
-              <label><input type="checkbox"> Gaming <span class="ct">31</span></label>
-              <label><input type="checkbox"> Accessories <span class="ct">112</span></label>
-            </div>
-            <div class="filter-block">
-              <h3>Price range</h3>
-              <div style="display:flex; justify-content:space-between; font-family:var(--ff-mono); font-size:11px; color:var(--fg-mute)"><span>$120</span><span>$3,400</span></div>
-              <div class="range-bar" aria-hidden="true"></div>
-              <div style="display:flex; justify-content:space-between; font-family:var(--ff-mono); font-size:var(--text-xs); font-weight:600; color:var(--ink); margin-top:var(--s2)"><span>$420</span><span>$2,380</span></div>
-            </div>
-            <div class="filter-block">
-              <h3>Brand</h3>
-              <label><input type="checkbox"> Apple <span class="ct">84</span></label>
-              <label><input type="checkbox" checked> Samsung <span class="ct">72</span></label>
-              <label><input type="checkbox"> Sony <span class="ct">36</span></label>
-              <label><input type="checkbox"> Canon <span class="ct">22</span></label>
-              <label><input type="checkbox"> HP <span class="ct">28</span></label>
-              <label><input type="checkbox"> Huawei <span class="ct">19</span></label>
-              <label><input type="checkbox"> Logitech <span class="ct">31</span></label>
-            </div>
-            <div class="filter-block">
-              <h3>Rating</h3>
-              <label><input type="checkbox"> ★★★★★ &amp; up <span class="ct">186</span></label>
-              <label><input type="checkbox"> ★★★★☆ &amp; up <span class="ct">242</span></label>
-              <label><input type="checkbox"> ★★★☆☆ &amp; up <span class="ct">296</span></label>
-            </div>
-            <div class="filter-block">
-              <h3>Availability</h3>
-              <label><input type="checkbox" checked> In stock <span class="ct">298</span></label>
-              <label><input type="checkbox"> On sale <span class="ct">64</span></label>
-              <label><input type="checkbox"> New arrivals <span class="ct">28</span></label>
-            </div>
-            <a href="#" class="btn btn--indigo btn--block">Apply filters</a>
-          </aside>
-
-          <div>
-            <div class="shop-toolbar">
-              <span class="count">Showing 1 – 12 of 314 products</span>
-              <div style="display:flex; gap:var(--s3); align-items:center">
-                <span style="font-size:var(--text-xs); color:var(--fg-mute); font-family:var(--ff-mono)">SORT</span>
-                <select>
-                  <option>Most popular</option>
-                  <option>Price: low to high</option>
-                  <option>Price: high to low</option>
-                  <option>Newest first</option>
-                  <option>Highest rated</option>
-                </select>
+          <aside class="filters" aria-label="{{ __('frontend.catalog.filters') }}">
+            <form method="GET" action="{{ route('shop') }}" class="catalog-filters" id="catalog-filters">
+              <div class="filter-block">
+                <label class="filter-title" for="catalog-q">{{ __('frontend.catalog.search') }}</label>
+                <input id="catalog-q" type="search" name="q" value="{{ $filters['q'] }}" placeholder="{{ __('frontend.catalog.search_placeholder') }}" autocomplete="off" />
               </div>
-            </div>
-
-            <div class="shop-grid">
-              <article class="product-card">
-                <div class="img-wrap"><span class="badge">New</span><button class="wishlist">♡</button><img src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500&q=80&auto=format&fit=crop" alt="" /></div>
-                <div class="stock"><span class="dot"></span>In stock · 52 items</div>
-                <a href="product.html" class="name">Galaxy Note 20 Ultra 5G</a>
-                <div class="price"><span class="now">$2,780</span></div>
-                <div class="stars">★★★★★ <span class="count">(56)</span></div>
-                <a href="cart.html" class="btn">Order now →</a>
-              </article>
-              <article class="product-card">
-                <div class="img-wrap"><span class="badge badge--sale">Sale</span><button class="wishlist">♡</button><img src="https://images.unsplash.com/photo-1561154464-82e9adf32764?w=500&q=80&auto=format&fit=crop" alt="" /></div>
-                <div class="stock"><span class="dot"></span>In stock · 32 items</div>
-                <a href="product.html" class="name">iPad 10th Generation</a>
-                <div class="price"><span class="now">$1,780</span><span class="was">$1,980</span></div>
-                <div class="stars">★★★★★ <span class="count">(124)</span></div>
-                <a href="cart.html" class="btn">Order now →</a>
-              </article>
-              <article class="product-card">
-                <div class="img-wrap"><button class="wishlist">♡</button><img src="https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=500&q=80&auto=format&fit=crop" alt="" /></div>
-                <div class="stock"><span class="dot"></span>In stock · 18 items</div>
-                <a href="product.html" class="name">Apple MacBook Pro M3</a>
-                <div class="price"><span class="now">$2,480</span></div>
-                <div class="stars">★★★★★ <span class="count">(89)</span></div>
-                <a href="cart.html" class="btn">Order now →</a>
-              </article>
-              <article class="product-card">
-                <div class="img-wrap"><button class="wishlist">♡</button><img src="https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=500&q=80&auto=format&fit=crop" alt="" /></div>
-                <div class="stock"><span class="dot"></span>In stock · 24 items</div>
-                <a href="product.html" class="name">Canon EOS R7 DSLR</a>
-                <div class="price"><span class="now">$1,920</span></div>
-                <div class="stars">★★★★☆ <span class="count">(67)</span></div>
-                <a href="cart.html" class="btn">Order now →</a>
-              </article>
-              <article class="product-card">
-                <div class="img-wrap"><span class="badge">New</span><button class="wishlist">♡</button><img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&q=80&auto=format&fit=crop" alt="" /></div>
-                <div class="stock"><span class="dot"></span>In stock · 41 items</div>
-                <a href="product.html" class="name">Apple Watch Series 9</a>
-                <div class="price"><span class="now">$680</span></div>
-                <div class="stars">★★★★★ <span class="count">(245)</span></div>
-                <a href="cart.html" class="btn">Order now →</a>
-              </article>
-              <article class="product-card">
-                <div class="img-wrap"><button class="wishlist">♡</button><img src="https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?w=500&q=80&auto=format&fit=crop" alt="" /></div>
-                <div class="stock"><span class="dot"></span>In stock · 67 items</div>
-                <a href="product.html" class="name">Beats Studio Buds Pro</a>
-                <div class="price"><span class="now">$280</span></div>
-                <div class="stars">★★★★☆ <span class="count">(312)</span></div>
-                <a href="cart.html" class="btn">Order now →</a>
-              </article>
-              <article class="product-card">
-                <div class="img-wrap"><span class="badge badge--sale">Sale</span><button class="wishlist">♡</button><img src="https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=500&q=80&auto=format&fit=crop" alt="" /></div>
-                <div class="stock"><span class="dot"></span>In stock · 22 items</div>
-                <a href="product.html" class="name">Apple HomePod 2nd Gen</a>
-                <div class="price"><span class="now">$280</span><span class="was">$320</span></div>
-                <div class="stars">★★★★★ <span class="count">(98)</span></div>
-                <a href="cart.html" class="btn">Order now →</a>
-              </article>
-              <article class="product-card">
-                <div class="img-wrap"><button class="wishlist">♡</button><img src="https://images.unsplash.com/photo-1592840496694-26d035b52b48?w=500&q=80&auto=format&fit=crop" alt="" /></div>
-                <div class="stock"><span class="dot"></span>In stock · 34 items</div>
-                <a href="product.html" class="name">Power Wired Controller</a>
-                <div class="price"><span class="now">$190</span></div>
-                <div class="stars">★★★★★ <span class="count">(78)</span></div>
-                <a href="cart.html" class="btn">Order now →</a>
-              </article>
-              <article class="product-card">
-                <div class="img-wrap"><button class="wishlist">♡</button><img src="https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=500&q=80&auto=format&fit=crop" alt="" /></div>
-                <div class="stock"><span class="dot"></span>In stock · 19 items</div>
-                <a href="product.html" class="name">Galaxy S24 Ultra Mint</a>
-                <div class="price"><span class="now">$1,420</span></div>
-                <div class="stars">★★★★☆ <span class="count">(56)</span></div>
-                <a href="cart.html" class="btn">Order now →</a>
-              </article>
-            </div>
-
-            <div class="pagination">
-              <a href="#" class="pg">‹</a>
-              <a href="#" class="pg is-active">1</a>
-              <a href="#" class="pg">2</a>
-              <a href="#" class="pg">3</a>
-              <a href="#" class="pg">…</a>
-              <a href="#" class="pg">26</a>
-              <a href="#" class="pg">›</a>
-            </div>
+              <fieldset class="filter-block">
+                <legend>{{ __('frontend.catalog.category') }}</legend>
+                @foreach ($categories as $category)
+                  <label><input type="checkbox" name="category[]" value="{{ $category['slug'] }}" @checked(in_array($category['slug'], $filters['category'], true)) /><span>{{ $category['name'] }}</span><span class="ct">{{ $category['count'] }}</span></label>
+                @endforeach
+              </fieldset>
+              <fieldset class="filter-block price-filter" data-price-filter>
+                <legend>{{ __('frontend.catalog.price_range') }}</legend>
+                @php
+                  $selectedMin = $filters['min_price'] ?? $priceBounds['min'];
+                  $selectedMax = $filters['max_price'] ?? $priceBounds['max'];
+                @endphp
+                <div class="price-bounds"><span>{{ $moneyFormatter->format($priceBounds['min']) }}</span><span>{{ $moneyFormatter->format($priceBounds['max']) }}</span></div>
+                <div class="dual-range">
+                  <div class="dual-range__track" data-range-track></div>
+                  <input type="range" name="min_price" min="{{ $priceBounds['min'] }}" max="{{ $priceBounds['max'] }}" step="1000" value="{{ $selectedMin }}" aria-label="{{ __('frontend.catalog.minimum_price') }}" data-range-min />
+                  <input type="range" name="max_price" min="{{ $priceBounds['min'] }}" max="{{ $priceBounds['max'] }}" step="1000" value="{{ $selectedMax }}" aria-label="{{ __('frontend.catalog.maximum_price') }}" data-range-max />
+                </div>
+                <div class="price-selected"><strong data-min-output>{{ $moneyFormatter->format($selectedMin) }}</strong><strong data-max-output>{{ $moneyFormatter->format($selectedMax) }}</strong></div>
+              </fieldset>
+              <fieldset class="filter-block">
+                <legend>{{ __('frontend.catalog.brand') }}</legend>
+                @foreach ($brands as $brand)
+                  <label><input type="checkbox" name="brand[]" value="{{ $brand['slug'] }}" @checked(in_array($brand['slug'], $filters['brand'], true)) /><span>{{ $brand['name'] }}</span><span class="ct">{{ $brand['count'] }}</span></label>
+                @endforeach
+              </fieldset>
+              <input type="hidden" name="sort" value="{{ $filters['sort'] }}" data-filter-sort />
+              <input type="hidden" name="per_page" value="{{ $filters['per_page'] }}" data-filter-per-page />
+              <button class="btn btn--indigo btn--block" type="submit">{{ __('frontend.catalog.apply') }}</button>
+              <a href="{{ route('shop') }}" class="catalog-reset" data-catalog-reset>{{ __('frontend.catalog.reset') }}</a>
+            </form>
+          </aside>
+          <div class="catalog-content">
+            <div id="catalog-results" aria-live="polite">@include('frontend.shop.results')</div>
+            <div class="catalog-loading" data-catalog-loading hidden aria-hidden="true"><span class="catalog-spinner" aria-hidden="true"></span><span>{{ __('frontend.catalog.loading') }}</span></div>
+            <p class="catalog-error" data-catalog-error hidden role="alert">{{ __('frontend.catalog.load_error') }}</p>
           </div>
-
         </div>
       </div>
     </section>
-
-    <section class="brands">
-      <div class="container">
-        <div class="brand-row">
-          <a href="#" class="brand-logo">HP</a><a href="#" class="brand-logo">Huawei</a>
-          <a href="#" class="brand-logo">Nokia</a><a href="#" class="brand-logo">Samsung</a>
-          <a href="#" class="brand-logo">Canon</a><a href="#" class="brand-logo">Sony</a>
-        </div>
-      </div>
-    </section>
-
   </main>
 @endsection

@@ -17,6 +17,7 @@ class PermissionMatrixService
         'roles' => ['label' => 'Vai trò & phân quyền', 'description' => 'Role, permission và audit IAM.'],
         'settings' => ['label' => 'Cấu hình', 'description' => 'Xem và cập nhật cấu hình hệ thống.'],
         'menus' => ['label' => 'Menu website', 'description' => 'Quản lý điều hướng động ngoài storefront.'],
+        'banners' => ['label' => 'Banner trang chủ', 'description' => 'Quản lý Hero và khối quảng bá theo lịch.'],
     ];
 
     /** @return Collection<string, array{label: string, description: string, permissions: Collection<int, Permission>}> */

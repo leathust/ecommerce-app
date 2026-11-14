@@ -84,6 +84,7 @@ class Kernel extends HttpKernel
         'auth.basic' => AuthenticateWithBasicAuth::class,
         'auth.session' => AuthenticateSession::class,
         'active' => EnsureUserIsActive::class,
+        'customer' => \App\Http\Middleware\EnsureUserIsCustomer::class,
         'admin' => EnsureUserIsAdmin::class,
         'cache.headers' => SetCacheHeaders::class,
         'can' => Authorize::class,

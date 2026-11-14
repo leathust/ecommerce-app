@@ -33,7 +33,7 @@ class AdminRolePermissionMatrixTest extends TestCase
         $this->assertSame(Permission::count(), $groupedIds->count());
         $this->assertSame(Permission::count(), $groupedIds->unique()->count());
         $this->assertSame(
-            ['dashboard', 'catalog', 'orders', 'customers', 'contacts', 'users', 'roles', 'settings', 'menus'],
+            ['dashboard', 'catalog', 'orders', 'customers', 'contacts', 'users', 'roles', 'settings', 'menus', 'banners'],
             $groups->keys()->all(),
         );
 

@@ -2,29 +2,41 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Http\Requests\StorefrontCatalogRequest;
+use App\Models\Product;
+use App\Services\StorefrontCatalogService;
+use App\Services\StorefrontHomeService;
 
 class HomeController extends Controller
 {
     //
-    public function home()
+    public function home(StorefrontHomeService $home)
     {
-        return view('frontend.home');
+        return view('frontend.home', ['homePage' => $home->home(app()->getLocale())]);
     }
 
-    public function cart()
+    public function shop(StorefrontCatalogRequest $request, StorefrontCatalogService $catalog)
     {
-        return view('frontend.cart');
-    }
+        $data = $catalog->shop($request->validated(), app()->getLocale());
 
-    public function shop()
-    {
-        return view('frontend.shop');
+        if ($request->ajax()) {
+            return response()->json([
+                'html' => view('frontend.shop.results', $data)->render(),
+                'total' => $data['products']->total(),
+            ]);
+        }
+
+        return view('frontend.shop', $data);
     }
 
     public function products()
     {
-        return view('frontend.products');
+        return redirect()->route('shop');
+    }
+
+    public function product(Product $storefrontProduct, StorefrontCatalogService $catalog)
+    {
+        return view('frontend.products', $catalog->detail($storefrontProduct, app()->getLocale()));
     }
 
     public function contact()
@@ -42,8 +54,4 @@ class HomeController extends Controller
         return view('frontend.help');
     }
 
-    public function account()
-    {
-        return view('frontend.account');
-    }
 }
