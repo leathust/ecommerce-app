@@ -151,7 +151,8 @@ class CartPageTest extends TestCase
             ->assertSee('230.000 ₫')
             ->assertSee('Mua thêm 300.000 ₫')
             ->assertSee('Cần thêm 200.000 ₫')
-            ->assertSee('Thanh toán · Sắp ra mắt');
+            ->assertSee(route('checkout'), false)
+            ->assertSee('Tiến hành đặt hàng');
 
         CartItem::query()->where('cart_id', $cart->id)->update(['quantity' => 5]);
         $this->actingAs($customer)

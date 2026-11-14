@@ -217,16 +217,18 @@ Cart phải dùng bảng `carts` và `cart_items` hiện có, không dùng local
 
 **Kết quả thực tế ngày 14/11/2026:** `CartFactory` đã có helper guest token hash, customer owner, nhiều item và unavailable item; `CartItemFactory` có quantity/out-of-stock/inactive state. Test chứng minh raw token không được persist, quan hệ owner hợp lệ, Cart delete cascade item, product có Cart history bị restrict và `DatabaseSeeder` không gọi/không tồn tại `CartSeeder`. Runbook `docs/cart-operations.md` mô tả schema, cookie, login merge/logout, routes, AJAX/no-JS, deploy/backfill, rollback, retention/cleanup bảo thủ, troubleshooting, token redaction và toàn bộ phần ngoài scope. README và tài liệu kiến trúc đã liên kết module Cart. `CartFactoryTest` đạt 6 test/25 assertion; toàn bộ Cart đạt 50 test/410 assertion; full regression đạt 401 test/3734 assertion; 24 migration đều Ran và PHP/route/dashboard/docs/diff checks đạt.
 
-### [ ] Task 11.9 — Quality gate Cart
+### [x] Task 11.9 — Quality gate Cart
 
 **Dependency:** Task 11.1–11.8.
 
-- [ ] Regression guest/customer/admin ownership, login merge và logout isolation.
-- [ ] Regression published/stock/quantity/price/settings/locale/media.
-- [ ] Regression AJAX/no-JS, CSRF, throttle, idempotency, stale response và badge/totals.
-- [ ] Regression query budget, unique/concurrency, token secrecy và XSS.
-- [ ] Visual QA desktop/tablet/mobile, keyboard, screen reader semantics và reduced-motion.
-- [ ] Chạy full regression, route/migration/Blade/JS/dashboard/diff checks.
+- [x] Regression guest/customer/admin ownership, login merge và logout isolation.
+- [x] Regression published/stock/quantity/price/settings/locale/media.
+- [x] Regression AJAX/no-JS, CSRF, throttle, idempotency, stale response và badge/totals.
+- [x] Regression query budget, unique/concurrency, token secrecy và XSS.
+- [x] Visual QA desktop/tablet/mobile, keyboard, screen reader semantics và reduced-motion.
+- [x] Chạy full regression, route/migration/Blade/JS/dashboard/diff checks.
+
+**Kết quả thực tế 14/11/2026 — DONE:** targeted Cart/Auth/Catalog/Wishlist đạt **102 tests, 781 assertions**; full regression gần nhất đạt **463 tests, 4230 assertions**; 27 migration đều Ran; route, JavaScript, dashboard và diff checks đạt. Người dùng đã xác nhận visual QA desktop/tablet/mobile hoàn tất; Cart đủ điều kiện làm dependency cho Checkout 14.4.
 
 **Kết quả cần đạt:** Cart an toàn, nhất quán, responsive và không phá Wishlist/Catalog/Auth/Admin.
 

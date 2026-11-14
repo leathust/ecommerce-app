@@ -17,6 +17,8 @@ use App\Http\Controllers\AdminSystemSettingController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\CatalogImageController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\CheckoutPaymentController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ElementController;
 use App\Http\Controllers\HomeController;
@@ -66,6 +68,16 @@ Route::middleware('storefront.locale')->group(function (): void {
         ->middleware('throttle:60,1')
         ->name('home.trending');
     Route::get('/cart', [CartController::class, 'index'])->name('cart');
+    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
+    Route::post('/checkout', [CheckoutController::class, 'store'])->middleware('throttle:10,1')->name('checkout.store');
+    Route::get('/checkout/payments/{paymentAttempt:public_id}', [CheckoutPaymentController::class, 'show'])
+        ->whereUuid('paymentAttempt')
+        ->middleware('throttle:payment-status')
+        ->name('checkout.payment');
+    Route::get('/checkout/payments/{paymentAttempt:public_id}/status', [CheckoutPaymentController::class, 'status'])
+        ->whereUuid('paymentAttempt')
+        ->middleware('throttle:payment-status')
+        ->name('checkout.payment.status');
     Route::middleware('throttle:cart-mutations')->group(function (): void {
         Route::post('/cart/items/{storefrontProduct}', [CartController::class, 'store'])
             ->name('cart.items.store');

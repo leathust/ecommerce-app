@@ -879,4 +879,195 @@
       }
     });
   });
+  // Checkout form: keep the native POST, but lock the submit control while it is in flight.
+  document.querySelectorAll('[data-checkout-form]').forEach((form) => {
+    form.addEventListener('submit', (event) => {
+      if (form.dataset.submitting === 'true') {
+        event.preventDefault();
+        return;
+      }
+
+      form.dataset.submitting = 'true';
+      form.setAttribute('aria-busy', 'true');
+      form.classList.add('is-pending');
+
+      const submit = form.querySelector('[data-checkout-submit]');
+      if (submit) {
+        submit.disabled = true;
+        submit.textContent = form.dataset.pendingText || submit.textContent;
+      }
+    });
+  });
+
+  // Payment page: countdown and owner-scoped polling. The server response remains the source of truth.
+  const paymentRoot = document.querySelector('[data-payment-status]');
+
+  if (paymentRoot && paymentRoot.dataset.statusUrl) {
+    const countdown = paymentRoot.querySelector('[data-payment-countdown]');
+    const countdownWrap = paymentRoot.querySelector('[data-payment-countdown-wrap]');
+    const statusBox = paymentRoot.querySelector('.payment-status');
+    const statusText = paymentRoot.querySelector('[data-payment-status-text]');
+    const statusDetail = paymentRoot.querySelector('[data-payment-status-detail]');
+    const feedback = paymentRoot.querySelector('[data-payment-feedback]');
+
+    let remaining = Math.max(0, Number(paymentRoot.dataset.remainingSeconds) || 0);
+    let countdownTimer = null;
+    let pollTimer = null;
+    let polling = false;
+    let stopped = false;
+    let failures = 0;
+    let expiryPolled = false;
+
+    const pad = (value) => String(value).padStart(2, '0');
+
+    const renderCountdown = () => {
+      if (!countdown) return;
+      countdown.textContent = `${pad(Math.floor(remaining / 60))}:${pad(remaining % 60)}`;
+      countdownWrap?.classList.toggle('is-expired', remaining <= 0);
+    };
+
+    const announce = (message) => {
+      if (!feedback) return;
+      feedback.textContent = message;
+      feedback.hidden = message === '';
+    };
+
+    const showError = (message) => {
+      if (!statusBox) return;
+      statusBox.classList.add('is-error');
+      if (statusText) statusText.textContent = message;
+      if (statusDetail) statusDetail.textContent = '';
+    };
+
+    const stopPolling = () => {
+      stopped = true;
+      window.clearTimeout(pollTimer);
+      if (countdownTimer) window.clearInterval(countdownTimer);
+    };
+
+    const schedule = (delay) => {
+      window.clearTimeout(pollTimer);
+      if (stopped) return;
+      pollTimer = window.setTimeout(poll, Math.max(1000, Number(delay) || 5000));
+    };
+
+    const poll = async () => {
+      if (stopped || polling) return;
+      polling = true;
+
+      try {
+        const response = await fetch(paymentRoot.dataset.statusUrl, {
+          headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+          credentials: 'same-origin',
+          cache: 'no-store',
+        });
+
+        if (response.status === 404 || response.status === 403) {
+          stopPolling();
+          showError(paymentRoot.dataset.lostText || '');
+          return;
+        }
+
+        if (!response.ok) throw new Error('payment-status');
+        const payload = await response.json();
+        failures = 0;
+
+        if (typeof payload.remaining_seconds === 'number') {
+          remaining = Math.max(0, Number(payload.remaining_seconds) || 0);
+          if (remaining > 0) expiryPolled = false;
+          renderCountdown();
+        }
+
+        if (typeof payload.state === 'string' && payload.state !== paymentRoot.dataset.state) {
+          window.location.reload();
+          return;
+        }
+
+        schedule(payload.poll_after_ms);
+      } catch (error) {
+        failures += 1;
+        if (failures >= 3) showError(paymentRoot.dataset.errorText || '');
+        schedule(Math.min(30000, 5000 * Math.min(failures, 4)));
+      } finally {
+        polling = false;
+      }
+    };
+
+    renderCountdown();
+    schedule(paymentRoot.dataset.pollAfterMs);
+
+    countdownTimer = window.setInterval(() => {
+      if (stopped) return;
+      if (remaining > 0) {
+        remaining -= 1;
+        renderCountdown();
+      }
+      if (remaining === 0 && !expiryPolled) {
+        expiryPolled = true;
+        poll();
+      }
+    }, 1000);
+
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && !stopped) poll();
+    });
+  }
+
+  // Copy-to-clipboard controls on the payment page.
+  const copyFeedback = document.querySelector('[data-payment-feedback]');
+  const copyFailedText = document.querySelector('[data-payment-status]')?.dataset.copyFailedText || '';
+
+  const writeClipboard = async (value) => {
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      await navigator.clipboard.writeText(value);
+      return true;
+    }
+
+    const area = document.createElement('textarea');
+    area.value = value;
+    area.setAttribute('readonly', '');
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    document.body.appendChild(area);
+    area.select();
+    let copied = false;
+    try {
+      copied = document.execCommand('copy');
+    } catch (error) {
+      copied = false;
+    }
+    area.remove();
+    return copied;
+  };
+
+  document.querySelectorAll('[data-copy-value]').forEach((button) => {
+    button.addEventListener('click', async () => {
+      const value = button.dataset.copyValue || '';
+      const original = button.textContent;
+      const copiedText = button.dataset.copiedText || original;
+
+      try {
+        const copied = await writeClipboard(value);
+        if (!copied) throw new Error('copy');
+        button.textContent = copiedText;
+        if (copyFeedback) {
+          copyFeedback.hidden = false;
+          copyFeedback.textContent = copiedText;
+        }
+      } catch (error) {
+        if (copyFeedback) {
+          copyFeedback.hidden = false;
+          copyFeedback.textContent = copyFailedText;
+        }
+      }
+
+      window.setTimeout(() => {
+        button.textContent = original;
+        if (copyFeedback) {
+          copyFeedback.hidden = true;
+          copyFeedback.textContent = '';
+        }
+      }, 2000);
+    });
+  });
 })();

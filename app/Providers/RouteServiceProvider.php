@@ -57,6 +57,15 @@ class RouteServiceProvider extends ServiceProvider
             return Limit::perMinute(120)->by($request->ip());
         });
 
+        RateLimiter::for('payment-status', function (Request $request) {
+            $rawToken = $request->cookie(\App\Services\PaymentAccessTokenService::COOKIE_NAME);
+            $actor = $request->user()?->getAuthIdentifier()
+                ? 'customer:'.$request->user()->getAuthIdentifier()
+                : (is_string($rawToken) ? 'guest:'.hash('sha256', $rawToken) : 'ip:'.$request->ip());
+
+            return Limit::perMinute(120)->by($actor.'|'.$request->ip());
+        });
+
         $this->routes(function () {
             Route::middleware('api')
                 ->prefix('api')

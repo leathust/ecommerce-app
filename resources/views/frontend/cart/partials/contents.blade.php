@@ -45,7 +45,8 @@
       <div class="cart-line is-total"><span>{{ __('frontend.cart.estimated_total') }}</span><strong>{{ $cartPage['formatted_estimated_total'] }}</strong></div>
       @if ($cartPage['free_shipping_enabled'] && ! $cartPage['shipping_is_free'] && $cartPage['available_quantity'] > 0)<p class="cart-summary__notice">{{ __('frontend.cart.free_shipping_remaining', ['amount' => $cartPage['free_shipping_remaining']]) }}</p>@endif
       @if ($cartPage['minimum_order_enabled'] && ! $cartPage['minimum_order_met'])<p class="cart-summary__notice cart-summary__notice--warning">{{ __('frontend.cart.minimum_remaining', ['amount' => $cartPage['minimum_order_remaining']]) }}</p>@endif
-      <p class="cart-summary__disclaimer">{{ __('frontend.cart.estimate_disclaimer') }}</p><span class="btn btn--indigo btn--block is-disabled" aria-disabled="true">{{ __('frontend.cart.checkout_later') }}</span>
+      <p class="cart-summary__disclaimer">{{ __('frontend.cart.estimate_disclaimer') }}</p>
+      <a href="{{ route('checkout') }}" class="btn btn--indigo btn--block">{{ __('frontend.cart.checkout') }}</a>
     </aside>
   </div>
 @endif
