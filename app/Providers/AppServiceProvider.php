@@ -25,6 +25,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // Prefer native schema operations even when Doctrine DBAL is installed, so
+        // SQLite (used by the test suite) keeps its native drop-column semantics
+        // instead of rebuilding tables and recreating their indexes.
+        \Illuminate\Database\Schema\Builder::$alwaysUsesNativeSchemaOperationsIfPossible = true;
+
         $this->app->scoped(CartIdentityService::class);
         $this->app->scoped(StorefrontCartContext::class);
         $this->app->scoped(StorefrontWishlistContext::class);

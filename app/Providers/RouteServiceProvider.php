@@ -53,6 +53,10 @@ class RouteServiceProvider extends ServiceProvider
             return Limit::perMinute(20)->by($request->user()?->getAuthIdentifier() ?: $request->ip());
         });
 
+        RateLimiter::for('sepay-webhook', function (Request $request) {
+            return Limit::perMinute(120)->by($request->ip());
+        });
+
         $this->routes(function () {
             Route::middleware('api')
                 ->prefix('api')

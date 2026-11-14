@@ -50,6 +50,9 @@ return [
         'email_required' => 'Please enter your email address.',
         'email_invalid' => 'Please enter a valid email address.',
         'password_required' => 'Please enter your password.',
+        'or' => 'or',
+        'google_button' => 'Sign in with Google',
+        'google_failed' => 'Google sign-in failed. Please try again.',
     ],
 
     'profile' => [
@@ -82,6 +85,8 @@ return [
         'password_confirmation' => 'Confirm new password',
         'password_hint' => 'At least 12 characters with uppercase, lowercase, a number and a symbol.',
         'save_password' => 'Change password',
+        'saving' => 'Saving…',
+        'request_error' => 'Your account could not be updated. Please try again.',
         'updated' => 'Your personal information has been updated.',
         'password_updated' => 'Your password has been changed.',
         'current_password_required' => 'Please enter your current password.',

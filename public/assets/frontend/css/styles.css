@@ -410,6 +410,8 @@ input, select, textarea { font: inherit; color: inherit; }
 .btn--ghost:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .btn--sm { padding: 8px 14px; font-size: var(--text-xs); }
 .btn--block { width: 100%; }
+.btn--google { display: inline-flex; align-items: center; justify-content: center; gap: 10px; background: var(--paper); color: var(--ink); border-color: var(--rule-strong); }
+.btn--google:hover { background: var(--paper-soft); color: var(--ink); border-color: var(--ink); }
 .btn--pill-ghost-onDark {
   background: transparent; color: var(--paper);
   border-color: rgba(255,255,255,0.3);
@@ -1743,6 +1745,8 @@ fieldset.filter-block { border-left: 0; border-right: 0; border-top: 0; }
 .auth-remember { display: flex; align-items: center; gap: var(--s2); margin: 0 0 var(--s5); color: var(--fg-soft); font-size: var(--text-sm); }
 .auth-remember input { accent-color: var(--indigo); }
 .auth-card__note { margin: var(--s5) 0 0; font-size: var(--text-sm); text-align: center; }
+.auth-divider { display: flex; align-items: center; gap: var(--s3); margin: var(--s5) 0; color: var(--fg-mute); font-size: var(--text-xs); text-transform: uppercase; }
+.auth-divider::before, .auth-divider::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
 .form-alert { margin-bottom: var(--s5); padding: 12px 14px; border-radius: var(--r-sm); font-size: var(--text-sm); }
 .form-alert--error { border: 1px solid #fecaca; background: #fef2f2; color: #991b1b; }
 .form-alert--success { border: 1px solid #bbf7d0; background: #f0fdf4; color: #166534; }
@@ -1789,6 +1793,9 @@ fieldset.filter-block { border-left: 0; border-right: 0; border-top: 0; }
 .field-error { color: #b91c1c; }
 .field input[aria-invalid="true"] { border-color: #dc2626; box-shadow: 0 0 0 3px rgba(220,38,38,0.1); }
 .account-password-hint { margin: calc(var(--s2) * -1) 0 var(--s5); color: var(--fg-mute); font-size: var(--text-xs); }
+.account-feedback--ajax:focus { outline: 3px solid rgba(79,70,229,0.2); outline-offset: 2px; }
+.account-form.is-pending { opacity: 0.72; }
+.account-form[aria-busy="true"] .account-form__submit { cursor: wait; }
 
 /* ---------- Wishlist ---------- */
 .wishlist-toolbar { display: flex; align-items: center; justify-content: space-between; gap: var(--s4); margin-bottom: var(--s6); }

@@ -11,6 +11,7 @@
         str_contains($key, 'instagram') => 'fa-brands fa-instagram',
         str_contains($key, 'youtube') => 'fa-brands fa-youtube',
         str_contains($key, 'tiktok') => 'fa-brands fa-tiktok',
+        str_contains($key, 'google') => 'fa-brands fa-google',
         str_contains($key, 'favicon') => 'fa-solid fa-star',
         str_contains($key, 'logo'), $definition['type'] === 'image' => 'fa-regular fa-image',
         str_contains($key, 'timezone'), str_contains($key, 'working_hours') => 'fa-regular fa-clock',
@@ -47,10 +48,10 @@
   <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-4">
     <div>
       <h1 class="h3 mb-1">Cài đặt hệ thống</h1>
-      <p class="text-muted mb-0">Quản lý thông tin vận hành theo registry; credential và secret vẫn được bảo vệ trong môi trường triển khai.</p>
+      <p class="text-muted mb-0">Quản lý thông tin vận hành theo registry; secret Google OAuth được che khi hiển thị và ẩn khỏi audit/storefront.</p>
     </div>
     <div class="d-flex flex-wrap gap-2">
-      <span class="badge text-bg-light border align-self-center"><i class="fa-solid fa-shield-halved me-1" aria-hidden="true"></i>Không lưu secret</span>
+      <span class="badge text-bg-light border align-self-center"><i class="fa-solid fa-shield-halved me-1" aria-hidden="true"></i>Secret được che</span>
       @if(!$canUpdate)<span class="badge text-bg-warning align-self-center"><i class="fa-solid fa-eye me-1" aria-hidden="true"></i>Chỉ xem</span>@endif
     </div>
   </div>
@@ -147,9 +148,17 @@
                 </div>
               @elseif($definition['type'] === 'bool')
                 <input type="hidden" name="settings[{{ $key }}]" value="0" @disabled(!$canUpdate)>
-                <div class="form-check form-switch pt-1">
-                  <input class="form-check-input @if($fieldErrors) is-invalid @endif" type="checkbox" role="switch" id="{{ $fieldId }}" name="settings[{{ $key }}]" value="1" @checked((bool)$value) @disabled(!$canUpdate || $isRuntimeLocked)>
-                  <label class="form-check-label" for="{{ $fieldId }}">{{ (bool)$value ? 'Đang bật' : 'Đang tắt' }}</label>
+                <div class="setting-toggle @if($fieldErrors) setting-toggle--invalid @endif">
+                  <input class="setting-toggle__input visually-hidden" type="checkbox" role="switch" id="{{ $fieldId }}" name="settings[{{ $key }}]" value="1" data-setting-toggle @checked((bool)$value) @disabled(!$canUpdate || $isRuntimeLocked)>
+                  <label class="setting-toggle__control" for="{{ $fieldId }}">
+                    <span class="setting-toggle__track" aria-hidden="true">
+                      <span class="setting-toggle__thumb"><i class="fa-regular fa-lightbulb"></i></span>
+                    </span>
+                    <span class="setting-toggle__copy">
+                      <strong data-setting-toggle-status>{{ (bool)$value ? 'Đang bật' : 'Đang tắt' }}</strong>
+                      <small>{{ $isRuntimeLocked ? 'Được quản lý bởi hệ thống' : 'Nhấn để thay đổi trạng thái' }}</small>
+                    </span>
+                  </label>
                 </div>
               @elseif($definition['type'] === 'enum')
                 <select class="form-select @if($fieldErrors) is-invalid @endif" id="{{ $fieldId }}" name="settings[{{ $key }}]" @disabled(!$canUpdate)>
@@ -159,6 +168,13 @@
                 </select>
               @elseif($definition['type'] === 'textarea')
                 <textarea class="form-control @if($fieldErrors) is-invalid @endif" id="{{ $fieldId }}" name="settings[{{ $key }}]" rows="4" @disabled(!$canUpdate)>{{ $value }}</textarea>
+              @elseif($definition['type'] === 'secret')
+                <input class="form-control @if($fieldErrors) is-invalid @endif" id="{{ $fieldId }}" type="password" name="settings[{{ $key }}]" value="" autocomplete="new-password" placeholder="Để trống nếu không đổi" @disabled(!$canUpdate)>
+                @if(filled($value))
+                  <div class="form-text text-success"><i class="fa-solid fa-circle-check me-1" aria-hidden="true"></i>Đã cấu hình; để trống để giữ nguyên giá trị hiện tại.</div>
+                @else
+                  <div class="form-text">Chưa cấu hình.</div>
+                @endif
               @else
                 @php
                   $inputType = match($definition['type']) {
@@ -194,6 +210,16 @@
     const form = document.querySelector('[data-settings-form]');
     const feedback = document.querySelector('[data-settings-feedback]');
     const errorSummary = form?.querySelector('[data-settings-error-summary]');
+
+    const updateToggleStatus = (toggle) => {
+      const status = toggle.closest('.setting-toggle')?.querySelector('[data-setting-toggle-status]');
+      if (status) status.textContent = toggle.checked ? 'Đang bật' : 'Đang tắt';
+    };
+
+    document.querySelectorAll('[data-setting-toggle]').forEach((toggle) => {
+      updateToggleStatus(toggle);
+      toggle.addEventListener('change', () => updateToggleStatus(toggle));
+    });
 
     const restorePreview = (input) => {
       const preview = document.getElementById(input.dataset.previewTarget);
@@ -257,6 +283,7 @@
 
     const clearValidationErrors = () => {
       form.querySelectorAll('.is-invalid').forEach((field) => field.classList.remove('is-invalid'));
+      form.querySelectorAll('.setting-toggle--invalid').forEach((toggle) => toggle.classList.remove('setting-toggle--invalid'));
       form.querySelectorAll('[data-settings-ajax-error]').forEach((error) => error.remove());
       errorSummary.hidden = true;
       errorSummary.textContent = '';
@@ -283,11 +310,12 @@
         }
 
         field.classList.add('is-invalid');
+        field.closest('.setting-toggle')?.classList.add('setting-toggle--invalid');
         const error = document.createElement('div');
         error.className = 'invalid-feedback d-block';
         error.dataset.settingsAjaxError = 'true';
         error.textContent = messages[0];
-        field.insertAdjacentElement('afterend', error);
+        (field.closest('.setting-toggle') || field).insertAdjacentElement('afterend', error);
         firstInvalid ||= field;
       });
 
@@ -308,7 +336,9 @@
       const field = event.target;
       if (!(field instanceof HTMLInputElement || field instanceof HTMLSelectElement || field instanceof HTMLTextAreaElement)) return;
       field.classList.remove('is-invalid');
-      const error = field.nextElementSibling;
+      const toggle = field.closest('.setting-toggle');
+      toggle?.classList.remove('setting-toggle--invalid');
+      const error = (toggle || field).nextElementSibling;
       if (error?.hasAttribute('data-settings-ajax-error')) error.remove();
     });
 

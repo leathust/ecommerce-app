@@ -33,7 +33,7 @@ class SystemSettingServiceTest extends TestCase
     {
         $groups = config('system_settings.groups');
         $definitions = config('system_settings.settings');
-        $allowedTypes = ['string', 'textarea', 'bool', 'int', 'decimal', 'enum', 'email', 'url', 'image'];
+        $allowedTypes = ['string', 'textarea', 'bool', 'int', 'decimal', 'enum', 'email', 'url', 'image', 'secret'];
         $allowedStatuses = ['active_consumer', 'planned_consumer', 'infrastructure_only'];
         $allowedEmptyBehaviors = ['fallback', 'hide', 'disable'];
 

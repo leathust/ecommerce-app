@@ -1,5 +1,7 @@
 # Ecommerce App
 
+> Hồ sơ customer storefront: xem contract, bảo mật, test và troubleshooting tại [`docs/profile-operations.md`](docs/profile-operations.md).
+
 Ứng dụng thương mại điện tử xây dựng bằng Laravel 10, có giao diện khách hàng, đăng nhập quản trị, phân quyền theo role/permission và module liên hệ khách hàng. Hệ thống đang trong quá trình phát triển; nhiều trang thương mại điện tử hiện là giao diện mẫu.
 
 ## 1. Công nghệ và yêu cầu

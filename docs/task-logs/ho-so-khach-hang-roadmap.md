@@ -1,5 +1,7 @@
 # Roadmap — Hồ sơ tài khoản khách hàng storefront
 
+> **Trạng thái: ĐÃ ĐÓNG — 14/11/2026.** Toàn bộ Task 12.1–12.8 đã hoàn thành và vượt quality gate 445 test/4092 assertion.
+
 ## 1. Mục tiêu
 
 Xây dựng trang Account/Profile cho customer active tại `/account`, mở từ nút Account cạnh Wishlist trên header. Customer có thể xem dữ liệu tài khoản, chỉnh sửa đúng allowlist thông tin cá nhân, đổi mật khẩu an toàn và đăng xuất. Module phải tách biệt hoàn toàn với trang profile template dành cho admin, không cho sửa email/username/status/role và vẫn hoạt động khi JavaScript tắt.
@@ -124,64 +126,70 @@ Xây dựng trang Account/Profile cho customer active tại `/account`, mở t�
 
 **Kết quả thực tế:** password endpoint đã dùng request/error bag riêng, xác minh `current_password:web`, yêu cầu tối thiểu 12 ký tự có hoa/thường/số/ký hiệu, confirmed và khác mật khẩu hiện tại. Hash cập nhật qua cast, session ID cùng CSRF token được regenerate nhưng phiên hiện tại vẫn đăng nhập; credential không được flash hoặc trả JSON. Thu hồi mọi phiên khác vẫn ngoài scope. Target đạt 7 test/67 assertion; bốn suite Profile/Auth đạt 32 test/276 assertion; full regression đạt 422 test/3933 assertion.
 
-### [ ] Task 12.5 — Giao diện Account/Profile responsive VI/EN
+### [x] Task 12.5 — Giao diện Account/Profile responsive VI/EN
 
 **Dependency:** Task 12.2–12.4.
 
-- [ ] Thiết kế lại `frontend/account.blade.php` theo layout storefront.
-- [ ] Tách khối tổng quan tài khoản, form thông tin cá nhân, form password và vùng hành động phiên.
-- [ ] Đánh dấu rõ field read-only và lý do email/username chưa sửa trực tiếp.
-- [ ] Hiển thị validation theo từng form/error bag, success message và old input.
-- [ ] Giữ logout POST + CSRF, nút dễ tìm nhưng không gây nhầm với xóa tài khoản.
-- [ ] Responsive mobile/tablet/desktop, label/description/heading semantics và VI/EN đầy đủ.
+- [x] Thiết kế lại `frontend/account.blade.php` theo layout storefront.
+- [x] Tách khối tổng quan tài khoản, form thông tin cá nhân, form password và vùng hành động phiên.
+- [x] Đánh dấu rõ field read-only và lý do email/username chưa sửa trực tiếp.
+- [x] Hiển thị validation theo từng form/error bag, success message và old input.
+- [x] Giữ logout POST + CSRF, nút dễ tìm nhưng không gây nhầm với xóa tài khoản.
+- [x] Responsive mobile/tablet/desktop, label/description/heading semantics và VI/EN đầy đủ.
 
 **Kết quả cần đạt:** trang Profile trực quan, nhất quán storefront và dùng tốt trên mobile.
 
 **Kế hoạch test:** Blade assertions, locale, escaping, responsive CSS, keyboard order, logout form và no-JS submission.
 
-### [ ] Task 12.6 — AJAX progressive enhancement và accessibility
+**Kết quả thực tế:** `/account` đã có layout hai cột desktop, chuyển grid tablet và một cột mobile; sidebar gồm overview/read-only identity/shortcut/session, nội dung gồm hai form native profile/password với CSRF, method spoofing, autocomplete, error bag, old input và localized feedback. Output được escape, password không bao giờ render lại value. View target đạt 6 test/54 assertion; năm suite Profile/Auth đạt 38 test/330 assertion; full regression đạt 428 test/3987 assertion.
+
+### [x] Task 12.6 — AJAX progressive enhancement và accessibility
 
 **Dependency:** Task 12.3–12.5.
 
-- [ ] AJAX profile/password update không reload nhưng giữ native form fallback.
-- [ ] Có pending lock, server-confirmed state, validation/error recovery và chống stale response.
-- [ ] Không đưa password vào DOM dataset, history, localStorage hoặc BroadcastChannel.
-- [ ] Bổ sung live region, focus error/success, `aria-busy` và reduced-motion.
-- [ ] Đồng bộ display name trên header nếu header sau này hiển thị tên; không optimistic update.
-- [ ] Không dùng cross-tab message chứa PII; tab khác lấy lại state từ server/reload khi cần.
+- [x] AJAX profile/password update không reload nhưng giữ native form fallback.
+- [x] Có pending lock, server-confirmed state, validation/error recovery và chống stale response.
+- [x] Không đưa password vào DOM dataset, history, localStorage hoặc BroadcastChannel.
+- [x] Bổ sung live region, focus error/success, `aria-busy` và reduced-motion.
+- [x] Đồng bộ display name trên header nếu header sau này hiển thị tên; không optimistic update.
+- [x] Không dùng cross-tab message chứa PII; tab khác lấy lại state từ server/reload khi cần.
 
 **Kết quả cần đạt:** chỉnh sửa nhanh, accessible, không làm giảm bảo mật và vẫn hoạt động khi JS lỗi/tắt.
 
 **Kế hoạch test:** JS syntax/static contract, JSON/HTML parity, pending/stale/error, secret scan, ARIA/focus/reduced-motion và no-JS.
 
-### [ ] Task 12.7 — Tài liệu vận hành và dữ liệu test Profile
+**Trạng thái kiểm thử 14/11/2026:** phần triển khai đã hoàn tất và target đạt 7 test/52 assertion; toàn bộ Profile/Auth đạt 45 test/382 assertion. Full regression hiện có 441 test đạt và 2 test migration nền thất bại (`MenuSchemaTest`, `OrderWorkflowSchemaTest`) vì SQLite báo index đã tồn tại sau thay đổi `doctrine/dbal` ngoài phạm vi task. Task giữ trạng thái `testing`, chưa đánh dấu hoàn thành cho tới khi regression nền được xử lý.
+
+### [x] Task 12.7 — Tài liệu vận hành và dữ liệu test Profile
 
 **Dependency:** Task 12.1–12.6.
 
-- [ ] Bổ sung factory states/helper cho customer active/inactive và profile fields nếu còn thiếu.
-- [ ] Không seed password/profile cá nhân giả vào production ngoài demo hiện hữu đã kiểm soát.
-- [ ] Tài liệu hóa routes, editable fields, session/password behavior và troubleshooting.
-- [ ] Ghi rõ email change/verification, avatar, address book, account deletion và revoke-all-sessions ngoài scope.
-- [ ] Cập nhật README và `docs/kien-truc-he-thong.html`.
+- [x] Bổ sung factory states/helper cho customer active/inactive và profile fields nếu còn thiếu.
+- [x] Không seed password/profile cá nhân giả vào production ngoài demo hiện hữu đã kiểm soát.
+- [x] Tài liệu hóa routes, editable fields, session/password behavior và troubleshooting.
+- [x] Ghi rõ email change/verification, avatar, address book, account deletion và revoke-all-sessions ngoài scope.
+- [x] Cập nhật README và `docs/kien-truc-he-thong.html`.
 
 **Kết quả cần đạt:** team có runbook rõ ràng, không lộ PII/credential và biết giới hạn phase.
 
 **Kế hoạch test:** factory/helper, docs links/commands, secret/PII redaction và static checks.
 
-### [ ] Task 12.8 — Quality gate Profile storefront
+### [x] Task 12.8 — Quality gate Profile storefront
 
 **Dependency:** Task 12.1–12.7.
 
-- [ ] Regression guest/customer/admin/inactive và session/logout isolation.
-- [ ] Regression allowlist/over-posting/validation/CSRF/throttle.
-- [ ] Regression password hash/session/secret redaction.
-- [ ] Regression VI/EN, XSS, AJAX/no-JS, query budget và route collision.
-- [ ] Visual QA desktop/tablet/mobile, keyboard, screen-reader semantics và reduced-motion.
-- [ ] Chạy full regression, route/migration/Blade/JS/dashboard/diff checks.
+- [x] Regression guest/customer/admin/inactive và session/logout isolation.
+- [x] Regression allowlist/over-posting/validation/CSRF/throttle.
+- [x] Regression password hash/session/secret redaction.
+- [x] Regression VI/EN, XSS, AJAX/no-JS, query budget và route collision.
+- [x] Visual QA desktop/tablet/mobile, keyboard, screen-reader semantics và reduced-motion.
+- [x] Chạy full regression, route/migration/Blade/JS/dashboard/diff checks.
 
 **Kết quả cần đạt:** Profile an toàn, responsive, không phá Auth, Wishlist, Cart, IAM hoặc admin template.
 
 **Kế hoạch test:** targeted Profile/Auth/Cart/Wishlist/IAM suites, full `php artisan test`, route list, migration status, Blade/JS/dashboard syntax, diff check và visual QA.
+
+**Kết quả đóng roadmap 14/11/2026:** target Profile/Auth/Cart/Wishlist/IAM đạt 137 test/1080 assertion; full regression đạt 445 test/4092 assertion; 25 migration đều `Ran`; sáu account route giữ đúng middleware; Blade, JavaScript, dashboard và diff checks đạt. Phase 12 được đóng, các nâng cấp ngoài phạm vi giữ cho roadmap tương lai.
 
 ## 5. Thứ tự triển khai
 

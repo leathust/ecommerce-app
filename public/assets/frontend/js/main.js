@@ -715,6 +715,123 @@
     }
   });
 
+  // Account forms: AJAX enhancement only. Native PATCH/PUT forms remain the no-JS contract.
+  const profileForms = Array.from(document.querySelectorAll('[data-profile-form]'));
+  const profileFeedback = document.querySelector('[data-profile-feedback]');
+  const profileRequestState = new WeakMap();
+  let profileRequestVersion = 0;
+  const profileFieldAllowlist = new Set(['first_name', 'last_name', 'phone', 'current_password', 'password', 'password_confirmation']);
+
+  const clearProfileErrors = (form) => {
+    form.querySelectorAll('.field-error--ajax').forEach((error) => error.remove());
+    form.querySelectorAll('[aria-invalid="true"]').forEach((input) => {
+      input.removeAttribute('aria-invalid');
+      const describedBy = (input.getAttribute('aria-describedby') || '')
+        .split(/\s+/)
+        .filter((id) => id && !id.endsWith('-ajax-error'));
+      if (describedBy.length) input.setAttribute('aria-describedby', describedBy.join(' '));
+      else input.removeAttribute('aria-describedby');
+    });
+  };
+
+  const showProfileFeedback = (message, isError = false, shouldFocus = true) => {
+    if (!profileFeedback || !message) return;
+    profileFeedback.textContent = message;
+    profileFeedback.hidden = false;
+    profileFeedback.classList.toggle('form-alert--error', isError);
+    profileFeedback.classList.toggle('form-alert--success', !isError);
+    if (shouldFocus) profileFeedback.focus({ preventScroll: true });
+  };
+
+  const renderProfileErrors = (form, errors = {}) => {
+    let firstInvalid = null;
+    Object.entries(errors).forEach(([name, messages]) => {
+      if (!profileFieldAllowlist.has(name)) return;
+      const input = form.elements.namedItem(name);
+      if (!(input instanceof HTMLElement)) return;
+      const message = Array.isArray(messages) ? messages[0] : messages;
+      if (!message) return;
+      const id = `${input.id || `profile-${name}`}-ajax-error`;
+      const error = document.createElement('small');
+      error.id = id;
+      error.className = 'field-error field-error--ajax';
+      error.textContent = String(message);
+      input.insertAdjacentElement('afterend', error);
+      input.setAttribute('aria-invalid', 'true');
+      input.setAttribute('aria-describedby', [input.getAttribute('aria-describedby'), id].filter(Boolean).join(' '));
+      firstInvalid ||= input;
+    });
+    firstInvalid?.focus({ preventScroll: true });
+    return firstInvalid;
+  };
+
+  const applyConfirmedProfile = (payload) => {
+    const profile = payload?.profile;
+    if (!profile || typeof profile.display_name !== 'string') return;
+    document.querySelectorAll('[data-profile-display-name]').forEach((node) => { node.textContent = profile.display_name; });
+    const avatar = document.querySelector('[data-profile-avatar]');
+    if (avatar) avatar.textContent = Array.from(profile.display_name.trim())[0]?.toLocaleUpperCase() || '';
+    const welcome = document.querySelector('[data-profile-welcome]');
+    if (welcome) welcome.textContent = (welcome.dataset.welcomeTemplate || '__NAME__').replace('__NAME__', profile.display_name);
+  };
+
+  profileForms.forEach((form) => {
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (form.getAttribute('aria-busy') === 'true') return;
+
+      const submit = form.querySelector('[data-profile-submit]');
+      const originalLabel = submit?.textContent;
+      const version = ++profileRequestVersion;
+      const controller = new AbortController();
+      profileRequestState.get(form)?.controller?.abort();
+      profileRequestState.set(form, { version, controller });
+      clearProfileErrors(form);
+      if (profileFeedback) profileFeedback.hidden = true;
+      form.setAttribute('aria-busy', 'true');
+      form.classList.add('is-pending');
+      if (submit) {
+        submit.disabled = true;
+        submit.textContent = form.dataset.pendingText || originalLabel;
+      }
+
+      try {
+        const response = await fetch(form.action, {
+          method: 'POST',
+          body: new FormData(form),
+          signal: controller.signal,
+          headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (profileRequestState.get(form)?.version !== version) return;
+
+        if (!response.ok) {
+          const hasFieldError = renderProfileErrors(form, payload.errors);
+          const firstError = Object.values(payload.errors || {}).flat()[0];
+          showProfileFeedback(firstError || payload.message || profileFeedback?.dataset.errorMessage, true, !hasFieldError);
+          return;
+        }
+
+        if (form.dataset.profileForm === 'profile') applyConfirmedProfile(payload);
+        if (form.dataset.profileForm === 'password') form.reset();
+        showProfileFeedback(payload.message);
+      } catch (error) {
+        if (error.name !== 'AbortError' && profileRequestState.get(form)?.version === version) {
+          showProfileFeedback(error.message || profileFeedback?.dataset.errorMessage, true);
+        }
+      } finally {
+        if (profileRequestState.get(form)?.version === version) {
+          form.setAttribute('aria-busy', 'false');
+          form.classList.remove('is-pending');
+          if (submit) {
+            submit.disabled = false;
+            submit.textContent = originalLabel;
+          }
+        }
+      }
+    });
+  });
+
   // Newsletter: AJAX enhancement. The same form still works as a normal POST without JavaScript.
   document.querySelectorAll('[data-newsletter-form]').forEach((form) => {
     const feedback = form.querySelector('[data-newsletter-feedback]');

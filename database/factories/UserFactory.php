@@ -44,4 +44,19 @@ class UserFactory extends Factory
             'email_verified_at' => null,
         ]);
     }
+
+    public function customerProfile(): static
+    {
+        return $this->state(fn (): array => [
+            'first_name' => fake()->firstName(),
+            'last_name' => fake()->lastName(),
+            'phone' => fake()->numerify('09########'),
+            'status' => 'active',
+        ]);
+    }
+
+    public function inactiveCustomer(): static
+    {
+        return $this->customerProfile()->state(fn (): array => ['status' => 'inactive']);
+    }
 }

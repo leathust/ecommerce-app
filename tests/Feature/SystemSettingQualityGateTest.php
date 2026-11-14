@@ -125,10 +125,14 @@ class SystemSettingQualityGateTest extends TestCase
         $definitions = config('system_settings.settings');
 
         foreach ($definitions as $key => $definition) {
-            $this->assertDoesNotMatchRegularExpression(
-                '/password|token|secret|api[_-]?key|credential/i',
-                $key,
-            );
+            // Google OAuth credentials are an intentional, managed exception: they are
+            // stored in settings, never public, and redacted from audit payloads.
+            if (! str_starts_with($key, 'auth.google_')) {
+                $this->assertDoesNotMatchRegularExpression(
+                    '/password|token|secret|api[_-]?key|credential/i',
+                    $key,
+                );
+            }
             $this->assertNotSame($credential, $definition['default']);
         }
 

@@ -50,6 +50,9 @@ return [
         'email_required' => 'Vui lòng nhập địa chỉ email.',
         'email_invalid' => 'Địa chỉ email không đúng định dạng.',
         'password_required' => 'Vui lòng nhập mật khẩu.',
+        'or' => 'hoặc',
+        'google_button' => 'Đăng nhập bằng Google',
+        'google_failed' => 'Không thể đăng nhập bằng Google. Vui lòng thử lại.',
     ],
 
     'profile' => [
@@ -82,6 +85,8 @@ return [
         'password_confirmation' => 'Xác nhận mật khẩu mới',
         'password_hint' => 'Tối thiểu 12 ký tự, gồm chữ hoa, chữ thường, số và ký hiệu.',
         'save_password' => 'Đổi mật khẩu',
+        'saving' => 'Đang lưu…',
+        'request_error' => 'Không thể cập nhật tài khoản. Vui lòng thử lại.',
         'updated' => 'Thông tin cá nhân đã được cập nhật.',
         'password_updated' => 'Mật khẩu của bạn đã được thay đổi.',
         'current_password_required' => 'Vui lòng nhập mật khẩu hiện tại.',

@@ -42,6 +42,7 @@ return [
         'mail' => ['label' => 'Email', 'icon' => 'fa-solid fa-envelope', 'description' => 'Metadata email không nhạy cảm; SMTP vẫn do môi trường quản lý.'],
         'seo' => ['label' => 'SEO', 'icon' => 'fa-solid fa-magnifying-glass', 'description' => 'Metadata mặc định và quyền cho phép indexing.'],
         'social' => ['label' => 'Mạng xã hội', 'icon' => 'fa-solid fa-share-nodes', 'description' => 'Liên kết mạng xã hội công khai.'],
+        'auth' => ['label' => 'Đăng nhập Google', 'icon' => 'fa-brands fa-google', 'description' => 'Bật/tắt và cấu hình OAuth client cho đăng nhập Google của khách storefront.'],
     ],
 
     'settings' => [
@@ -96,5 +97,10 @@ return [
         'social.instagram_url' => $entry('social.instagram_url', 'social', 'Instagram', 'URL Instagram công khai.', 'url', '', ['nullable', 'url:http,https', 'max:2048'], true, 'active_consumer', ['frontend footer'], 'hide'),
         'social.youtube_url' => $entry('social.youtube_url', 'social', 'YouTube', 'URL YouTube công khai.', 'url', '', ['nullable', 'url:http,https', 'max:2048'], true, 'active_consumer', ['frontend footer'], 'hide'),
         'social.tiktok_url' => $entry('social.tiktok_url', 'social', 'TikTok', 'URL TikTok công khai.', 'url', '', ['nullable', 'url:http,https', 'max:2048'], true, 'active_consumer', ['frontend footer'], 'hide'),
+
+        'auth.google_login_enabled' => $entry('auth.google_login_enabled', 'auth', 'Bật đăng nhập Google', 'Cho phép khách đăng nhập storefront bằng Google khi đã có client id và secret.', 'bool', false, ['required', 'boolean'], false, 'active_consumer', ['storefront login button', 'google oauth routes']),
+        'auth.google_client_id' => $entry('auth.google_client_id', 'auth', 'Google Client ID', 'OAuth Client ID từ Google Cloud Console. Để trống để dùng GOOGLE_CLIENT_ID trong .env.', 'string', '', ['nullable', 'string', 'max:255'], false, 'active_consumer', ['google oauth provider']),
+        'auth.google_client_secret' => $entry('auth.google_client_secret', 'auth', 'Google Client Secret', 'OAuth Client Secret; được che khi hiển thị và ẩn khỏi audit. Để trống nếu không đổi.', 'secret', '', ['nullable', 'string', 'max:255'], false, 'active_consumer', ['google oauth provider']),
+        'auth.google_redirect_uri' => $entry('auth.google_redirect_uri', 'auth', 'Redirect URI', 'Để trống để dùng route callback mặc định của website.', 'url', '', ['nullable', 'url:http,https', 'max:2048'], false, 'active_consumer', ['google oauth callback']),
     ],
 ];

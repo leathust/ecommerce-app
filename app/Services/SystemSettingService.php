@@ -119,6 +119,13 @@ class SystemSettingService
             ]);
         }
 
+        // A blank secret input means "keep the stored value"; it must not overwrite it.
+        foreach ($values as $key => $value) {
+            if (($definitions[$key]['type'] ?? null) === 'secret' && trim((string) $value) === '') {
+                unset($values[$key]);
+            }
+        }
+
         $normalized = [];
 
         foreach ($values as $key => $value) {
@@ -236,7 +243,7 @@ class SystemSettingService
             'bool' => (bool) $value,
             'int' => (int) $value,
             'decimal' => $this->normalizeDecimal((string) $value),
-            'string', 'textarea', 'email', 'url', 'image', 'enum' => trim((string) $value),
+            'string', 'textarea', 'email', 'url', 'image', 'enum', 'secret' => trim((string) $value),
             default => throw new InvalidArgumentException("Unsupported system setting type [{$definition['type']}]."),
         };
     }

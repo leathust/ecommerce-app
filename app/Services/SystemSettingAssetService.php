@@ -96,7 +96,7 @@ class SystemSettingAssetService
     public function publicUrl(string $key, mixed $path): ?string
     {
         return is_string($path) && $this->isManagedPath($key, $path)
-            ? Storage::disk('public')->url($path)
+            ? asset('storage/'.ltrim($path, '/'))
             : null;
     }
 

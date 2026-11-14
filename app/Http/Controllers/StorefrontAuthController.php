@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StorefrontLoginRequest;
 use App\Services\CartIdentityService;
+use App\Services\GoogleOAuthService;
 use App\Support\SafeStorefrontRedirect;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,7 +14,7 @@ use Illuminate\View\View;
 
 class StorefrontAuthController extends Controller
 {
-    public function showLoginForm(Request $request, SafeStorefrontRedirect $redirect): View|RedirectResponse
+    public function showLoginForm(Request $request, SafeStorefrontRedirect $redirect, GoogleOAuthService $google): View|RedirectResponse
     {
         if ($request->user()?->isAdmin()) {
             return redirect()->route('admin.dashboard');
@@ -25,6 +26,7 @@ class StorefrontAuthController extends Controller
 
         return view('frontend.auth.login', [
             'returnTo' => $redirect->resolve($request, $request->query('return_to')),
+            'googleLoginEnabled' => $google->enabled(),
         ]);
     }
 

@@ -8,7 +8,7 @@
   <div class="container account-shell">
     <header class="account-hero" aria-labelledby="account-title">
       <span class="eyebrow">{{ __('frontend.profile.eyebrow') }}</span>
-      <h1 id="account-title">{{ __('frontend.auth.welcome', ['name' => $account['display_name']]) }}</h1>
+      <h1 id="account-title" data-profile-welcome data-welcome-template="{{ __('frontend.auth.welcome', ['name' => '__NAME__']) }}">{{ __('frontend.auth.welcome', ['name' => $account['display_name']]) }}</h1>
       <p>{{ __('frontend.profile.page_intro') }}</p>
     </header>
 
@@ -18,14 +18,15 @@
     @if (session('password_success'))
       <div class="form-alert form-alert--success account-feedback" role="status">{{ session('password_success') }}</div>
     @endif
+    <div class="form-alert account-feedback account-feedback--ajax" data-profile-feedback data-error-message="{{ __('frontend.profile.request_error') }}" role="status" aria-live="polite" aria-atomic="true" tabindex="-1" hidden></div>
 
     <div class="account-layout">
       <aside class="account-sidebar" aria-label="{{ __('frontend.profile.overview_title') }}">
         <section class="account-panel account-panel--overview" aria-labelledby="profile-overview-title">
-          <div class="account-avatar" aria-hidden="true">{{ mb_strtoupper(mb_substr($account['display_name'], 0, 1)) }}</div>
+          <div class="account-avatar" data-profile-avatar aria-hidden="true">{{ mb_strtoupper(mb_substr($account['display_name'], 0, 1)) }}</div>
           <div class="account-panel__heading account-panel__heading--center">
             <h2 id="profile-overview-title">{{ __('frontend.profile.overview_title') }}</h2>
-            <p>{{ $account['display_name'] }}</p>
+            <p data-profile-display-name>{{ $account['display_name'] }}</p>
           </div>
 
           <dl class="account-summary">
@@ -65,7 +66,7 @@
             <div class="form-alert form-alert--error" role="alert">{{ $errors->profile->first() }}</div>
           @endif
 
-          <form method="POST" action="{{ route('storefront.profile.update') }}" class="account-form">
+          <form method="POST" action="{{ route('storefront.profile.update') }}" class="account-form" data-profile-form="profile" data-pending-text="{{ __('frontend.profile.saving') }}">
             @csrf
             @method('PATCH')
             <div class="field-row">
@@ -85,7 +86,7 @@
               <input id="profile-phone" name="phone" type="tel" value="{{ old('phone', $account['phone']) }}" maxlength="30" autocomplete="tel" @if($errors->profile->has('phone')) aria-invalid="true" aria-describedby="profile-phone-error" @endif>
               @if ($errors->profile->has('phone'))<small id="profile-phone-error" class="field-error">{{ $errors->profile->first('phone') }}</small>@else<small class="field-hint">{{ __('frontend.profile.phone_hint') }}</small>@endif
             </div>
-            <button class="btn btn--indigo account-form__submit" type="submit">{{ __('frontend.profile.save_profile') }}</button>
+            <button class="btn btn--indigo account-form__submit" data-profile-submit type="submit">{{ __('frontend.profile.save_profile') }}</button>
           </form>
         </section>
 
@@ -99,7 +100,7 @@
             <div class="form-alert form-alert--error" role="alert">{{ $errors->password->first() }}</div>
           @endif
 
-          <form method="POST" action="{{ route('storefront.password.update') }}" class="account-form">
+          <form method="POST" action="{{ route('storefront.password.update') }}" class="account-form" data-profile-form="password" data-pending-text="{{ __('frontend.profile.saving') }}">
             @csrf
             @method('PUT')
             <div class="field">
@@ -119,7 +120,7 @@
               </div>
             </div>
             <p class="account-password-hint">{{ __('frontend.profile.password_hint') }}</p>
-            <button class="btn btn--ink account-form__submit" type="submit">{{ __('frontend.profile.save_password') }}</button>
+            <button class="btn btn--ink account-form__submit" data-profile-submit type="submit">{{ __('frontend.profile.save_password') }}</button>
           </form>
         </section>
       </div>

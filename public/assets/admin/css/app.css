@@ -6537,6 +6537,129 @@ body.app [data-settings-preview-actions][hidden] {
   display: none !important;
 }
 
+body.app .setting-toggle {
+  display: inline-flex;
+  max-width: 100%;
+}
+
+body.app .setting-toggle__control {
+  display: grid;
+  grid-template-columns: 64px minmax(116px, auto);
+  align-items: center;
+  gap: 14px;
+  margin: 0;
+  padding: 10px 14px 10px 10px;
+  border: 1px solid var(--m-divider);
+  border-radius: 12px;
+  background: var(--m-surface-2);
+  cursor: pointer;
+  transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
+
+body.app .setting-toggle__track {
+  position: relative;
+  isolation: isolate;
+  width: 64px;
+  height: 34px;
+  display: block;
+  border-radius: 999px;
+  background: #d0d5dd;
+  box-shadow: inset 0 1px 3px rgb(15 23 42 / 18%);
+  transition: background-color 200ms ease, box-shadow 200ms ease;
+}
+
+body.app .setting-toggle__thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  z-index: 1;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #667085;
+  background: #fff;
+  border: 1px solid rgb(15 23 42 / 8%);
+  box-shadow: 0 2px 5px rgb(15 23 42 / 22%);
+  transition: transform 200ms ease, color 200ms ease, background-color 200ms ease, box-shadow 200ms ease;
+}
+
+body.app .setting-toggle__thumb i {
+  font-size: 14px;
+  line-height: 1;
+}
+
+body.app .setting-toggle__copy {
+  min-width: 116px;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+body.app .setting-toggle__copy strong {
+  color: var(--m-text);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+body.app .setting-toggle__copy small {
+  margin-top: 2px;
+  color: var(--m-text-muted);
+  font-size: 11.5px;
+}
+
+body.app .setting-toggle__input:checked + .setting-toggle__control {
+  border-color: color-mix(in srgb, #f59e0b 42%, var(--m-divider));
+  background: color-mix(in srgb, #fbbf24 8%, var(--m-surface));
+}
+
+body.app .setting-toggle__input:checked + .setting-toggle__control .setting-toggle__track {
+  background: #f59e0b;
+  box-shadow: inset 0 1px 3px rgb(120 53 15 / 24%), 0 0 0 4px rgb(251 191 36 / 13%);
+}
+
+body.app .setting-toggle__input:checked + .setting-toggle__control .setting-toggle__thumb {
+  color: #f59e0b;
+  background: #fffbeb;
+  border-color: #fde68a;
+  box-shadow: 0 0 8px 2px rgb(253 224 71 / 75%), 0 2px 5px rgb(120 53 15 / 20%);
+  transform: translateX(30px);
+}
+
+body.app .setting-toggle__input:checked + .setting-toggle__control .setting-toggle__copy strong {
+  color: #b45309;
+}
+
+body.app .setting-toggle__input:focus-visible + .setting-toggle__control {
+  border-color: var(--m-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--m-accent) 18%, transparent);
+}
+
+body.app .setting-toggle__input:disabled + .setting-toggle__control {
+  cursor: not-allowed;
+  opacity: .62;
+}
+
+body.app .setting-toggle--invalid .setting-toggle__control {
+  border-color: var(--bs-danger);
+}
+
+@media (max-width: 575.98px) {
+  body.app .setting-toggle,
+  body.app .setting-toggle__control {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.app .setting-toggle__control,
+  body.app .setting-toggle__track,
+  body.app .setting-toggle__thumb {
+    transition: none;
+  }
+}
+
 /* Notification toggle rows */
 body.app .notif-grid {
   display: flex;
