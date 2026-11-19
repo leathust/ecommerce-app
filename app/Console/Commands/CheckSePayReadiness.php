@@ -17,6 +17,14 @@ class CheckSePayReadiness extends Command
 
         $this->line('SePay: '.($result['enabled'] ? 'ENABLED' : 'DISABLED'));
         $this->line('Environment: '.$result['environment']);
+        $this->line('Checkout QR: '.($result['checkout_ready'] ? 'READY' : 'NOT READY'));
+        $this->line('Webhook: '.($result['webhook_ready'] ? 'READY' : 'NOT READY'));
+        $this->line('Queue: '.($result['queue_ready'] ? 'READY' : 'NOT READY'));
+        $this->line('Broadcast: '.($result['broadcast_ready'] ? 'READY' : 'NOT READY'));
+
+        foreach ($result['checkout_checks'] as $name => $check) {
+            $this->line(sprintf('[%s] checkout.%s: %s', $check['ok'] ? 'OK' : 'FAIL', $name, $check['message']));
+        }
 
         foreach ($result['checks'] as $name => $check) {
             $this->line(sprintf('[%s] %s: %s', $check['ok'] ? 'OK' : 'FAIL', $name, $check['message']));

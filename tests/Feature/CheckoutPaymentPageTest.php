@@ -47,6 +47,7 @@ class CheckoutPaymentPageTest extends TestCase
             ->assertSee('amount=300000', false)
             ->assertSee('des='.$attempt->payment_code, false)
             ->assertSee('template=compact', false)
+            ->assertSee('data-status-url="'.parse_url(route('checkout.payment.status', ['paymentAttempt' => $attempt->public_id]), PHP_URL_PATH).'"', false)
             ->assertSee('data-payment-countdown', false)
             ->assertSee('role="timer"', false)
             ->assertHeader('X-Robots-Tag', 'noindex, nofollow');

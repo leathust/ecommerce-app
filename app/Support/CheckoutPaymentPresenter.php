@@ -94,8 +94,10 @@ class CheckoutPaymentPresenter
             'paid_at_iso' => $paidAt?->toIso8601String(),
             'paid_at_label' => $paidAt?->format('d/m/Y H:i'),
             'poll_after_ms' => $this->pollAfterMs($state),
-            'status_url' => route('checkout.payment.status', ['paymentAttempt' => $attempt->public_id]),
-            'refresh_url' => route('checkout.payment', ['paymentAttempt' => $attempt->public_id]),
+            // Keep polling on the hostname that issued the guest access cookie,
+            // while preserving a subdirectory deployment such as /ecommerce-app.
+            'status_url' => $this->routePath('checkout.payment.status', ['paymentAttempt' => $attempt->public_id]),
+            'refresh_url' => $this->routePath('checkout.payment', ['paymentAttempt' => $attempt->public_id]),
         ];
     }
 
@@ -142,5 +144,14 @@ class CheckoutPaymentPresenter
             'manual_review' => self::POLL_MANUAL_REVIEW_MS,
             default => null,
         };
+    }
+
+    /** @param array<string, mixed> $parameters */
+    private function routePath(string $name, array $parameters): string
+    {
+        $url = route($name, $parameters);
+        $path = parse_url($url, PHP_URL_PATH);
+
+        return is_string($path) && $path !== '' ? $path : $url;
     }
 }

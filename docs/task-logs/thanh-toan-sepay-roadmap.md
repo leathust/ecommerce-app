@@ -1,6 +1,6 @@
 # Roadmap — Tích hợp thanh toán online SePay
 
-> **Trạng thái:** ACTIVE — Task 14.5 đã hoàn tất ngày 14/11/2026: checkout page, QR/countdown, status owner/token-scoped, polling/no-JS và command expiry đã chạy. Task có thể làm tiếp: **14.6**; 14.7 chờ 14.6. Live vẫn chờ sandbox E2E và quality gate 14.12.
+> **Trạng thái:** ACTIVE — Task **14.5 đang được mở lại** ngày 19/11/2026 vì code/test QR đã có nhưng SePay Checkout vẫn bị khóa ở runtime, khách chưa chọn được phương thức SePay và chưa có bằng chứng QR thật tải/quét thành công. Task 14.6 chờ 14.5 được nghiệm thu lại; Live vẫn chờ sandbox E2E và quality gate 14.12.
 
 ## 1. Mục tiêu
 
@@ -344,10 +344,19 @@ REDIS_QUEUE=default
 - [x] Route trạng thái owner/token-scoped, trả state tối thiểu, `Cache-Control: no-store`.
 - [x] No-JS/polling fallback và nút thử lại an toàn; không cho sửa amount/code.
 - [x] Success/expired/manual-review UI và accessibility live region.
+- [x] Tách readiness Checkout QR khỏi webhook/queue/Pusher để không khóa phương thức thanh toán bởi dependency của task sau.
+- [x] Redirect trang payment và URL polling dùng đường dẫn tương đối để giữ nguyên hostname đang sở hữu cookie guest khi tunnel được thay.
+- [ ] Checkout runtime hiển thị và cho phép chọn SePay khi master flag, setting chuyển khoản và snapshot ngân hàng hợp lệ.
+- [ ] QA luồng thật Cart → Checkout → SePay → PaymentAttempt → trang QR trên desktop/mobile.
+- [ ] Xác nhận ảnh QR thật tải được và quét ra đúng account/amount/payment code trong sandbox.
 
-**Kết quả thực tế 14/11/2026 — DONE:** `GET /checkout` phát hành idempotency key trong session và render form VI/EN với totals server-side; POST SePay redirect sang `GET /checkout/payments/{public_id}`, cấp guest cookie `sepay_payment_access` HttpOnly path `/checkout/payments` (DB chỉ lưu SHA-256, grace 30 phút để xem trạng thái terminal). Trang QR dùng `vietqr.app/img` từ snapshot attempt (`acc`, `bank`, `amount`, `des=payment_code`, `template=compact`) và countdown server-driven; status endpoint chỉ trả state tối thiểu, không trả amount/code/account/PII, kèm `Cache-Control: no-store`, `Vary: Cookie`, `X-Robots-Tag`. Actor khác, admin/inactive hoặc cookie sai đều nhận 404. Attempt quá hạn được lazy-expire khi polling và bởi command `sepay:expire-payments` chạy mỗi phút; UI có success/expired/cancelled/failed/manual-review, no-JS meta refresh và live region. Không có migration mới; 28/28 migration Ran.
+**Trạng thái rà soát lại 19/11/2026 — IN PROGRESS:** phần code/test trước đây đã tạo checkout page, PaymentAttempt, QR/countdown, status owner/token-scoped, polling/no-JS và expiry command. Tuy nhiên `php artisan sepay:check` trên runtime thực tế báo `SePay: DISABLED`; nghiệm thu cũ chưa chứng minh khách có thể chọn SePay và ảnh QR thật tải/quét được. Task được mở lại để tách readiness Checkout khỏi hạ tầng webhook/Pusher/queue và QA end-to-end phần QR trước khi chuyển 14.6 sang ready.
 
-**Kiểm thử đã chạy:** `CheckoutPageTest` 10 passed/43 assertions; `CheckoutPaymentPageTest` 12 passed/85 assertions; `PaymentExpiryCommandTest` 2 passed/16 assertions; `CheckoutTest` 5 passed/26 assertions → **29 tests/170 assertions** cho phạm vi checkout. Regression mục tiêu `Checkout|Payment|Cart|Order` đạt **128 passed/1241 assertions**; full regression đạt **493 passed/4407 assertions**. `route:list` có 4 route checkout, `schedule:list` có 1 command, Blade cache, `php -l`, `node --check` (main.js + pm-board.js) và `git diff --check` đều đạt.
+**Kết quả triển khai lại 19/11/2026:** readiness đã tách thành `checkout_ready`, `webhook_ready`, `queue_ready`, `broadcast_ready`; Checkout QR chỉ yêu cầu master flag, environment, bank code/account và QR base URL hợp lệ, không còn bị khóa bởi webhook secret/API token/Redis/Pusher. `sepay:check` hiển thị từng profile và lý do Checkout chưa sẵn sàng mà không in credential. Target mở rộng đạt **48 tests, 871 assertions**; full regression đạt **496 tests, 4427 assertions**. Runtime hiện vẫn `Checkout QR: NOT READY` vì SePay đang tắt; QA chọn SePay và quét QR sandbox còn chờ cấu hình môi trường, nên task chưa được đóng.
+
+**Khắc phục tunnel 19/11/2026:** Checkout redirect và các URL refresh/polling đã chuyển sang relative URL, vì vậy không còn lấy hostname cũ từ `APP_URL`. `CheckoutPageTest|CheckoutPaymentPageTest` đạt **23 tests, 133 assertions**. Tại thời điểm kiểm tra sau `php artisan optimize:clear`, runtime vẫn nạp `app.url` là hostname tunnel cũ; cần lưu đúng một `APP_URL` hostname mới trước khi tạo attempt mới. Attempt guest cũ không thể mở ở hostname mới vì cookie `sepay_payment_access` được scope theo hostname và 404 là cơ chế bảo vệ chủ đích.
+
+**Kiểm thử đã chạy:** `CheckoutPageTest` 11 passed/48 assertions; `CheckoutPaymentPageTest` 12 passed/85 assertions; `PaymentExpiryCommandTest` 2 passed/16 assertions; `PaymentAccessTokenServiceTest` 4 passed/9 assertions; `CheckoutTest` 5 passed/26 assertions → **34 tests/184 assertions** cho phạm vi checkout. Regression mục tiêu `Checkout|Payment|Cart|Order` đạt **135 passed/1269 assertions**; full regression đạt **500 passed/4439 assertions**. `route:list` có 4 route checkout, `schedule:list` có 1 command, Blade cache, `php -l`, `node --check` (main.js + pm-board.js) và `git diff --check` đều đạt.
 
 **Kết quả cần đạt:** khách có thể thanh toán và theo dõi trạng thái ngay cả khi socket lỗi.
 

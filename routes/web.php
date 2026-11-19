@@ -35,9 +35,10 @@ use App\Http\Controllers\WishlistController;
 use App\Models\Product;
 use Illuminate\Support\Facades\Route;
 
-Route::post('/sepay-hook', [SePayWebhookController::class, 'store'])
-    ->middleware('throttle:sepay-webhook')
-    ->name('sepay.webhook');
+Route::post('/webhooks/sepay/{environment}', [SePayWebhookController::class, 'store'])
+    ->whereIn('environment', ['sandbox', 'live'])
+    ->middleware(['throttle:sepay-webhook', \App\Http\Middleware\VerifySePayWebhook::class])
+    ->name('webhooks.sepay.store');
 
 // User routes
 Route::get('/media/catalog/{type}/{id}', [CatalogImageController::class, 'show'])->whereIn('type', ['categories', 'brands'])->whereNumber('id')->name('catalog-images.show');
@@ -122,9 +123,6 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
 
     Route::middleware(['auth', 'active', 'admin'])->group(function (): void {
         Route::post('logout', [AdminAuthController::class, 'logout'])->name('logout');
-        Route::get('sepay-hook/logs', [SePayWebhookController::class, 'index'])
-            ->middleware('permission:orders.view')
-            ->name('sepay.logs');
         Route::get('brands', [AdminBrandController::class, 'index'])->middleware('permission:brands.view')->name('brands.index');
         Route::get('brands/create', [AdminBrandController::class, 'create'])->middleware('permission:brands.create')->name('brands.create');
         Route::post('brands', [AdminBrandController::class, 'store'])->middleware('permission:brands.create')->name('brands.store');

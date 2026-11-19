@@ -26,7 +26,7 @@ class CheckoutController extends Controller
 
         $cart = $context->cart(false);
         if (! $cart || ! $cart->items()->exists()) {
-            return redirect()->route('cart')->withErrors(['cart' => __('frontend.checkout.cart_empty')]);
+            return redirect()->to($this->routePath('cart', []))->withErrors(['cart' => __('frontend.checkout.cart_empty')]);
         }
 
         return response()
@@ -62,8 +62,8 @@ class CheckoutController extends Controller
         $result = $checkout->checkout($cart, $request->user(), $request->validated());
         $attempt = $result['payment_attempt'];
         $redirectUrl = $attempt
-            ? route('checkout.payment', ['paymentAttempt' => $attempt->public_id])
-            : route('cart');
+            ? $this->routePath('checkout.payment', ['paymentAttempt' => $attempt->public_id])
+            : $this->routePath('cart', []);
         $message = __('frontend.checkout.created');
 
         $payload = [
@@ -107,6 +107,23 @@ class CheckoutController extends Controller
         return $key;
     }
 
+    /** @param array<string, mixed> $parameters */
+    private function routePath(string $name, array $parameters): string
+    {
+        $url = route($name, $parameters);
+        $path = parse_url($url, PHP_URL_PATH);
+        $path = is_string($path) && $path !== '' ? $path : '/';
+
+        // redirect()->to() resolves a leading-slash path against the current request
+        // root. Strip that root's base path first, otherwise /ecommerce-app is added twice.
+        $basePath = rtrim((string) request()->getBasePath(), '/');
+        if ($basePath !== '' && ($path === $basePath || str_starts_with($path, $basePath.'/'))) {
+            $path = substr($path, strlen($basePath));
+        }
+
+        return $path === '' ? '/' : $path;
+    }
+
     private function isBlockedActor(Request $request): bool
     {
         $user = $request->user();
@@ -118,6 +135,6 @@ class CheckoutController extends Controller
     {
         return $request->expectsJson()
             ? response()->json(['message' => __('frontend.checkout.cart_empty'), 'errors' => ['cart' => [__('frontend.checkout.cart_empty')]]], 422)
-            : redirect()->route('cart')->withErrors(['cart' => __('frontend.checkout.cart_empty')]);
+            : redirect()->to($this->routePath('cart', []))->withErrors(['cart' => __('frontend.checkout.cart_empty')]);
     }
 }

@@ -29,6 +29,7 @@ class SePayInfrastructureTest extends TestCase
 
         $this->assertTrue($result['ready']);
         $this->assertFalse($result['enabled']);
+        $this->assertFalse($result['checkout_ready']);
         $this->assertSame('payments', config('sepay.queues.payments'));
         $this->assertSame('emails', config('sepay.queues.emails'));
         $this->assertSame('broadcasts', config('sepay.queues.broadcasts'));
@@ -55,6 +56,7 @@ class SePayInfrastructureTest extends TestCase
         $result = app(SePayReadinessService::class)->inspect();
 
         $this->assertFalse($result['ready']);
+        $this->assertFalse($result['checkout_ready']);
         $this->assertFalse($result['checks']['sepay_webhook_secret']['ok']);
         $this->assertFalse($result['checks']['queue_connection']['ok']);
         $this->assertFalse($result['checks']['broadcast_driver']['ok']);
@@ -84,5 +86,56 @@ class SePayInfrastructureTest extends TestCase
             ->assertSuccessful()
             ->doesntExpectOutputToContain('DO_NOT_PRINT_THIS')
             ->doesntExpectOutputToContain('0123456789');
+    }
+
+    public function test_checkout_qr_readiness_does_not_depend_on_future_webhook_queue_or_pusher_tasks(): void
+    {
+        config([
+            'sepay.enabled' => true,
+            'sepay.environment' => 'sandbox',
+            'sepay.qr_base_url' => 'https://vietqr.app/img',
+            'queue.default' => 'sync',
+            'broadcasting.default' => 'log',
+            'sepay.environments.sandbox' => [
+                'webhook_enabled' => false,
+                'webhook_secret' => null,
+                'api_token' => null,
+                'bank_code' => 'VCB',
+                'account_number' => '0123456789',
+                'account_name' => null,
+            ],
+        ]);
+
+        $result = app(SePayReadinessService::class)->inspect();
+        $checkout = app(SePayReadinessService::class)->checkoutConfiguration();
+
+        $this->assertTrue($result['checkout_ready']);
+        $this->assertFalse($result['webhook_ready']);
+        $this->assertFalse($result['queue_ready']);
+        $this->assertFalse($result['broadcast_ready']);
+        $this->assertTrue($checkout['ready']);
+        $this->assertSame('available', $checkout['status']);
+    }
+
+    public function test_checkout_qr_readiness_fails_closed_for_invalid_environment_bank_or_url(): void
+    {
+        config([
+            'sepay.enabled' => true,
+            'sepay.environment' => 'unsupported',
+            'sepay.qr_base_url' => 'javascript:alert(1)',
+            'sepay.environments.unsupported' => [
+                'bank_code' => null,
+                'account_number' => null,
+            ],
+        ]);
+
+        $checkout = app(SePayReadinessService::class)->checkoutConfiguration();
+
+        $this->assertFalse($checkout['ready']);
+        $this->assertSame('unavailable', $checkout['status']);
+        $this->assertFalse($checkout['checks']['environment']['ok']);
+        $this->assertFalse($checkout['checks']['bank_code']['ok']);
+        $this->assertFalse($checkout['checks']['account_number']['ok']);
+        $this->assertFalse($checkout['checks']['qr_base_url']['ok']);
     }
 }

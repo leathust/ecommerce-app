@@ -17,6 +17,7 @@ class CheckoutService
         private readonly SystemSettingService $settings,
         private readonly OrderInventoryService $inventory,
         private readonly PaymentAccessTokenService $paymentAccess,
+        private readonly SePayReadinessService $sepayReadiness,
     ) {}
 
     /** @param array<string,mixed> $data
@@ -111,16 +112,15 @@ class CheckoutService
     /** @return 'available'|'disabled'|'unavailable' */
     public function sepayAvailability(int $totalCents): string
     {
-        if ($totalCents % 100 !== 0 || ! config('sepay.enabled') || ! $this->settings->get('payment.bank_transfer_enabled')) {
+        if (! $this->settings->get('payment.bank_transfer_enabled')) {
             return 'disabled';
         }
 
-        $account = config('sepay.environments.'.config('sepay.environment'));
-        if (! is_array($account) || empty($account['bank_code']) || empty($account['account_number'])) {
+        if ($totalCents % 100 !== 0) {
             return 'unavailable';
         }
 
-        return 'available';
+        return $this->sepayReadiness->checkoutConfiguration()['status'];
     }
 
     private function ensureSePayReady(int $totalCents): void

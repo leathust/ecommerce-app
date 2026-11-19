@@ -113,6 +113,28 @@ class CheckoutPageTest extends TestCase
             ->assertDontSee('value="sepay"', false);
     }
 
+    public function test_sepay_option_is_selectable_when_checkout_qr_is_ready_without_webhook_or_pusher(): void
+    {
+        $this->enableSePay();
+        config([
+            'queue.default' => 'sync',
+            'broadcasting.default' => 'log',
+            'sepay.environments.sandbox.webhook_enabled' => false,
+            'sepay.environments.sandbox.webhook_secret' => null,
+            'sepay.environments.sandbox.api_token' => null,
+        ]);
+
+        $user = User::factory()->create();
+        $cart = Cart::factory()->forCustomer($user)->create();
+        CartItem::factory()->for($cart)->for(Product::factory()->create(['price' => 100000]))->create(['quantity' => 1]);
+
+        $this->actingAs($user)->get(route('checkout'))
+            ->assertOk()
+            ->assertSee('value="cod"', false)
+            ->assertSee('value="sepay"', false)
+            ->assertSee(__('frontend.checkout.sepay_hint', ['minutes' => 15]));
+    }
+
     public function test_post_requires_the_idempotency_key_issued_by_the_checkout_page(): void
     {
         $user = User::factory()->create();
@@ -130,6 +152,7 @@ class CheckoutPageTest extends TestCase
 
     public function test_sepay_html_checkout_redirects_to_payment_page_and_sets_guest_access_cookie(): void
     {
+        config(['app.url' => 'https://checkout.test/ecommerce-app']);
         $this->enableSePay();
         $raw = $this->rawCartToken();
         $cart = Cart::factory()->guestWithToken($raw)->create();
@@ -140,11 +163,16 @@ class CheckoutPageTest extends TestCase
             ->post(route('checkout.store'), $this->payload('sepay'));
 
         $attempt = PaymentAttempt::query()->firstOrFail();
-        $response->assertRedirect(route('checkout.payment', ['paymentAttempt' => $attempt->public_id]));
+        $paymentUrl = route('checkout.payment', ['paymentAttempt' => $attempt->public_id]);
+        $paymentPath = (string) parse_url($paymentUrl, PHP_URL_PATH);
+        $response->assertRedirect($paymentPath);
+        $this->assertSame($paymentPath, (string) parse_url((string) $response->headers->get('Location'), PHP_URL_PATH));
         $response->assertCookie(PaymentAccessTokenService::COOKIE_NAME);
 
-        $rawToken = (string) $response->getCookie(PaymentAccessTokenService::COOKIE_NAME)?->getValue();
+        $cookie = $response->getCookie(PaymentAccessTokenService::COOKIE_NAME);
+        $rawToken = (string) $cookie?->getValue();
         $this->assertNotSame('', $rawToken);
+        $this->assertSame(substr($paymentPath, 0, strrpos($paymentPath, '/')), $cookie?->getPath());
         $this->assertSame(hash('sha256', $rawToken), $attempt->fresh()->access_token_hash);
         $this->assertDatabaseHas('orders', ['id' => $attempt->order_id, 'payment_method' => 'bank_transfer']);
     }
