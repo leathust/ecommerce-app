@@ -11,6 +11,7 @@ use App\Http\Controllers\AdminCustomerController;
 use App\Http\Controllers\AdminHomeBannerController;
 use App\Http\Controllers\AdminMenuController;
 use App\Http\Controllers\AdminOrderController;
+use App\Http\Controllers\AdminPaymentReconciliationController;
 use App\Http\Controllers\AdminProductController;
 use App\Http\Controllers\AdminRoleController;
 use App\Http\Controllers\AdminSystemSettingController;
@@ -191,6 +192,24 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
         Route::patch('orders/{order}/status', [AdminOrderController::class, 'updateStatus'])
             ->middleware('permission:orders.update|orders.cancel')
             ->name('orders.status.update');
+        Route::get('payments/reconciliation', [AdminPaymentReconciliationController::class, 'index'])
+            ->middleware('permission:payments.view')
+            ->name('payments.reconciliation');
+        Route::get('payments/reconciliation/runs/{run}', [AdminPaymentReconciliationController::class, 'run'])
+            ->middleware('permission:payments.view')
+            ->name('payments.reconciliation.runs.show');
+        Route::get('payments/transactions/{sepayTransaction}', [AdminPaymentReconciliationController::class, 'show'])
+            ->middleware('permission:payments.view')
+            ->name('payments.transactions.show');
+        Route::post('payments/transactions/{sepayTransaction}/match', [AdminPaymentReconciliationController::class, 'manualMatch'])
+            ->middleware('permission:payments.manage')
+            ->name('payments.transactions.match');
+        Route::post('payments/transactions/{sepayTransaction}/ignore', [AdminPaymentReconciliationController::class, 'ignore'])
+            ->middleware('permission:payments.manage')
+            ->name('payments.transactions.ignore');
+        Route::post('payments/transactions/{sepayTransaction}/refund-note', [AdminPaymentReconciliationController::class, 'refundNote'])
+            ->middleware('permission:payments.manage')
+            ->name('payments.transactions.refund-note');
         Route::get('customers', [AdminCustomerController::class, 'index'])
             ->middleware('permission:customers.view')
             ->name('customers');

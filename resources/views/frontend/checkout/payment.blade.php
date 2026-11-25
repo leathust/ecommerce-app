@@ -28,6 +28,9 @@
         <div class="payment-layout"
           data-payment-status
           data-state="{{ $payment['state'] }}"
+          data-payment-public-id="{{ $payment['public_id'] }}"
+          data-broadcast-channel="{{ $payment['broadcast_channel'] }}"
+          data-broadcast-auth-url="{{ $payment['broadcast_auth_url'] }}"
           data-status-url="{{ $payment['status_url'] }}"
           data-poll-after-ms="{{ $payment['poll_after_ms'] }}"
           data-remaining-seconds="{{ $payment['remaining_seconds'] }}"
@@ -184,3 +187,7 @@
   </section>
 </main>
 @endsection
+
+@push('scripts')
+  @vite('resources/js/payment-realtime.js')
+@endpush

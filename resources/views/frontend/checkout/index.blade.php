@@ -55,6 +55,25 @@
                 @endif
               </div>
             </div>
+            @if ($checkout['is_customer'])
+              <div class="field">
+                <label for="checkout-account-email">{{ __('frontend.checkout.recipient_email') }}</label>
+                <input id="checkout-account-email" type="email" value="{{ $checkout['customer_email'] }}" autocomplete="email" readonly aria-describedby="checkout-email-hint">
+                <small id="checkout-email-hint" class="field-hint">{{ __('frontend.checkout.email_account_hint') }}</small>
+              </div>
+            @else
+              <div class="field">
+                <label for="checkout-email">{{ __('frontend.checkout.recipient_email') }}</label>
+                <input id="checkout-email" name="recipient_email" type="email" maxlength="255" autocomplete="email"
+                  data-checkout-email
+                  value="{{ old('recipient_email', $checkout['prefill']['recipient_email']) }}"
+                  @if ($errors->has('recipient_email')) aria-invalid="true" aria-describedby="checkout-email-error" @endif>
+                <small id="checkout-email-hint" class="field-hint">{{ __('frontend.checkout.email_guest_hint') }}</small>
+                @if ($errors->has('recipient_email'))
+                  <small id="checkout-email-error" class="field-error">{{ $errors->first('recipient_email') }}</small>
+                @endif
+              </div>
+            @endif
             <div class="field">
               <label for="checkout-address">{{ __('frontend.checkout.recipient_address') }}</label>
               <textarea id="checkout-address" name="shipping_address" required maxlength="2000" autocomplete="street-address"

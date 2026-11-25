@@ -43,7 +43,10 @@ class CheckoutPageData
             'prefill' => [
                 'recipient_name' => $customerName,
                 'recipient_phone' => (string) ($customer?->phone ?? ''),
+                'recipient_email' => (string) ($customer?->email ?? ''),
             ],
+            'customer_email' => $customer?->email,
+            'is_customer' => $customer !== null,
             'cod_enabled' => $codEnabled,
             'sepay_status' => $sepayStatus,
             'sepay_enabled' => $sepayStatus === 'available',

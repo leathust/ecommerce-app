@@ -65,6 +65,13 @@ Chi tiết deploy, rollback và troubleshooting: [docs/wishlist-operations.md](d
 
 Chi tiết token, merge, deploy, rollback, cleanup và troubleshooting: [docs/cart-operations.md](docs/cart-operations.md).
 
+### Thanh toán SePay
+
+- Checkout SePay dùng snapshot payment/order, QR và access token guest; webhook HMAC/API key, matching exact, Pusher realtime, Redis email queue và API reconciliation đều có idempotency.
+- Sandbox/live tách profile bằng `SEPAY_MODE` và các nhóm `SEPAY_SANDBOX_*`/`SEPAY_LIVE_*`; không đưa credential vào source, log hoặc dashboard.
+- `SEPAY_ENABLED=false` chỉ chặn checkout mới. Webhook, expiry và reconciliation cho attempt đang tồn tại vẫn được vận hành để recovery.
+- Quy trình sandbox E2E, worker/scheduler, Cloudflare HTTPS, chuyển Live, rotation và rollback nằm tại [docs/sepay-payment-operations.md](docs/sepay-payment-operations.md).
+
 ## 3. Cấu trúc thư mục
 
 ```text

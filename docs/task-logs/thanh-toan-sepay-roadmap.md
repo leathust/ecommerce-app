@@ -1,6 +1,6 @@
 # Roadmap — Tích hợp thanh toán online SePay
 
-> **Trạng thái:** ACTIVE — Task **14.5 đang được mở lại** ngày 19/11/2026 vì code/test QR đã có nhưng SePay Checkout vẫn bị khóa ở runtime, khách chưa chọn được phương thức SePay và chưa có bằng chứng QR thật tải/quét thành công. Task 14.6 chờ 14.5 được nghiệm thu lại; Live vẫn chờ sandbox E2E và quality gate 14.12.
+> **Trạng thái:** ACTIVE — Task 14.10 đã hoàn tất ngày 25/11/2026: SePay API reconciliation có pagination/retry/rate-limit, overlap window, checkpoint/resume, shared matcher/idempotency và admin exception workflow có RBAC/audit. Task tiếp theo có thể làm: **14.11** (sandbox/live rollout và vận hành). Task 14.5 vẫn còn checklist QA QR riêng; Live vẫn chờ sandbox E2E và quality gate 14.12.
 
 ## 1. Mục tiêu
 
@@ -345,7 +345,8 @@ REDIS_QUEUE=default
 - [x] No-JS/polling fallback và nút thử lại an toàn; không cho sửa amount/code.
 - [x] Success/expired/manual-review UI và accessibility live region.
 - [x] Tách readiness Checkout QR khỏi webhook/queue/Pusher để không khóa phương thức thanh toán bởi dependency của task sau.
-- [x] Redirect trang payment và URL polling dùng đường dẫn tương đối để giữ nguyên hostname đang sở hữu cookie guest khi tunnel được thay.
+- [x] Redirect, refresh và polling dùng URL chỉ gồm path, giữ prefix `/ecommerce-app` và hostname đang sở hữu cookie guest khi tunnel được thay.
+- [x] Cookie guest `sepay_payment_access` dùng path theo base path triển khai (`/ecommerce-app/checkout/payments`), khớp route payment ở môi trường tunnel.
 - [ ] Checkout runtime hiển thị và cho phép chọn SePay khi master flag, setting chuyển khoản và snapshot ngân hàng hợp lệ.
 - [ ] QA luồng thật Cart → Checkout → SePay → PaymentAttempt → trang QR trên desktop/mobile.
 - [ ] Xác nhận ảnh QR thật tải được và quét ra đúng account/amount/payment code trong sandbox.
@@ -354,7 +355,7 @@ REDIS_QUEUE=default
 
 **Kết quả triển khai lại 19/11/2026:** readiness đã tách thành `checkout_ready`, `webhook_ready`, `queue_ready`, `broadcast_ready`; Checkout QR chỉ yêu cầu master flag, environment, bank code/account và QR base URL hợp lệ, không còn bị khóa bởi webhook secret/API token/Redis/Pusher. `sepay:check` hiển thị từng profile và lý do Checkout chưa sẵn sàng mà không in credential. Target mở rộng đạt **48 tests, 871 assertions**; full regression đạt **496 tests, 4427 assertions**. Runtime hiện vẫn `Checkout QR: NOT READY` vì SePay đang tắt; QA chọn SePay và quét QR sandbox còn chờ cấu hình môi trường, nên task chưa được đóng.
 
-**Khắc phục tunnel 19/11/2026:** Checkout redirect và các URL refresh/polling đã chuyển sang relative URL, vì vậy không còn lấy hostname cũ từ `APP_URL`. `CheckoutPageTest|CheckoutPaymentPageTest` đạt **23 tests, 133 assertions**. Tại thời điểm kiểm tra sau `php artisan optimize:clear`, runtime vẫn nạp `app.url` là hostname tunnel cũ; cần lưu đúng một `APP_URL` hostname mới trước khi tạo attempt mới. Attempt guest cũ không thể mở ở hostname mới vì cookie `sepay_payment_access` được scope theo hostname và 404 là cơ chế bảo vệ chủ đích.
+**Khắc phục tunnel 19–20/11/2026:** `show()` được gọi đúng; 404 phát sinh từ `authorizeAccess()` vì cookie guest ban đầu có `Path=/checkout/payments`, trong khi URL triển khai là `/ecommerce-app/checkout/payments/...`; browser không gửi cookie nên guard từ chối đúng chủ đích. Redirect, refresh và polling nay dùng path lấy từ route đầy đủ: giữ `/ecommerce-app` nhưng không mang hostname tunnel. Cookie dùng cùng base path. Cần tạo attempt mới sau bản vá vì attempt cũ không có cookie đúng path. Khi QA qua Cloudflare, `APP_URL` phải là tunnel hiện hành; lần kiểm tra gần nhất runtime đang nạp `http://localhost/ecommerce-app`. Kiểm thử `CheckoutPageTest|CheckoutPaymentPageTest|PaymentAccessTokenServiceTest` đạt **27 tests, 144 assertions**.
 
 **Kiểm thử đã chạy:** `CheckoutPageTest` 11 passed/48 assertions; `CheckoutPaymentPageTest` 12 passed/85 assertions; `PaymentExpiryCommandTest` 2 passed/16 assertions; `PaymentAccessTokenServiceTest` 4 passed/9 assertions; `CheckoutTest` 5 passed/26 assertions → **34 tests/184 assertions** cho phạm vi checkout. Regression mục tiêu `Checkout|Payment|Cart|Order` đạt **135 passed/1269 assertions**; full regression đạt **500 passed/4439 assertions**. `route:list` có 4 route checkout, `schedule:list` có 1 command, Blade cache, `php -l`, `node --check` (main.js + pm-board.js) và `git diff --check` đều đạt.
 
@@ -362,74 +363,104 @@ REDIS_QUEUE=default
 
 **Kế hoạch test:** authorization/token, XSS, QR params, polling, expiry, mobile/keyboard/VI-EN.
 
-### [ ] Task 14.6 — Webhook HMAC và ingestion idempotent
+### [x] Task 14.6 — Webhook HMAC và ingestion idempotent
 
 **Dependency:** 14.2, 14.3.
 
-- [ ] Thay route ghi file thử nghiệm bằng controller production chuyên trách.
-- [ ] Đọc raw body qua `$request->getContent()`, verify timestamp ±300 giây và HMAC bằng `hash_equals`.
-- [ ] Validate content type/payload/transfer fields và giới hạn body.
-- [ ] Insert receipt unique trước ACK, dispatch processing after commit.
-- [ ] Duplicate trả `{"success":true}`; lỗi auth/payload dùng 401/400; lỗi persist dùng 5xx để SePay retry.
-- [ ] Structured logging redact secret/account/PII; rate limit không làm mất traffic SePay hợp lệ.
+- [x] Thay route ghi file thử nghiệm bằng controller production chuyên trách.
+- [x] Đọc raw body qua `$request->getContent()`, verify timestamp ±300 giây và HMAC bằng `hash_equals`.
+- [x] Validate content type/payload/transfer fields và giới hạn body.
+- [x] Insert receipt unique trước ACK, dispatch processing queue `payments`.
+- [x] Duplicate trả `{"success":true}`; lỗi auth/payload dùng 401/400; lỗi persist/dispatch để SePay retry.
+- [x] Structured logging/header storage redact secret/account/PII; rate limit giữ burst/retry ở endpoint production.
+
+**Kết quả thực tế 19/11/2026 — DONE:** production endpoint `POST /webhooks/sepay/{sandbox|live}` đã thay logger `/sepay-hook`. Middleware xác thực raw body HMAC-SHA256 theo `timestamp.raw_body`, timestamp ±300 giây, content type JSON, body limit và environment secret riêng. Payload được validate sau khi xác thực; receipt lưu unique theo `(environment, external_event_id)` và payload hash, chỉ lưu header allowlist. Duplicate/replay ACK thành công mà không tạo receipt/job business thứ hai. `ProcessSePayWebhookJob` queue `payments` unique theo receipt và cố ý chưa matching payment; matching/order confirmation thuộc Task 14.7. Đã gỡ route logger cũ, admin log viewer cũ và CSRF exception cũ. Pusher/socket thuộc 14.8, Redis email thuộc 14.9.
+
+**Kiểm thử đã chạy:** `SePayWebhookTest` đạt **9 tests/32 assertions**; regression `SePay|Payment|Checkout` đạt **55 tests/278 assertions**; full regression đạt **507 tests/4457 assertions**. Đã kiểm tra HMAC valid/tampered, timestamp thiếu/hết hạn, content type, body limit, malformed JSON, invalid payload, duplicate delivery, environment isolation, queue dispatch và sensitive header redaction. PHP lint, route list và diff checks đạt.
 
 **Kết quả cần đạt:** endpoint nhanh, an toàn, replay-safe và không xử lý business logic hai lần.
 
 **Kế hoạch test:** HMAC vector, tampered body, expired timestamp, duplicate/concurrent delivery, malformed JSON, retry response contract.
 
-### [ ] Task 14.7 — Matching và xác nhận thanh toán nguyên tử
+### [x] Task 14.7 — Matching và xác nhận thanh toán nguyên tử
 
 **Dependency:** 14.4, 14.6.
 
-- [ ] `PaymentMatcher` dùng chung cho webhook và reconciliation.
-- [ ] Lock receipt/transaction/attempt/order; exact code/amount/account/environment.
-- [ ] Lưu transaction, update payment attempt/order/history đúng một lần.
-- [ ] Tích hợp inventory/order transition theo policy đã chốt.
-- [ ] Phát `OrderPaymentConfirmed` chỉ sau commit.
-- [ ] Phân loại unmatched/late/under/over/outgoing vào manual review.
+- [x] `PaymentMatcher` dùng chung cho webhook và reconciliation.
+- [x] Lock receipt/transaction/attempt/order; exact code/amount/account/environment.
+- [x] Lưu transaction, update payment attempt/order/history đúng một lần.
+- [x] Tích hợp inventory/order transition theo policy đã chốt.
+- [x] Phát `OrderPaymentConfirmed` chỉ sau commit.
+- [x] Phân loại unmatched/late/under/over/outgoing vào manual review.
+
+**Kết quả thực tế 19/11/2026 — DONE:** `SePayPaymentMatcher` xử lý receipt queued từ Task 14.6, normalize payload SePay, match exact payment code/amount/account/environment và tạo `SePayTransaction` immutable. External transaction unique theo environment; replay/duplicate không tạo transaction, payment history hoặc event lần hai. `PaymentConfirmationService` lock `PaymentAttempt` và `Order`, chuyển attempt `pending → paid`, order `unpaid → paid` và `pending → confirmed`, set timestamps, ghi `payment_status_histories`/`order_status_histories`, không deduct inventory lần hai vì SePay checkout đã reserve stock từ 14.4. `OrderPaymentConfirmed` dùng `ShouldDispatchAfterCommit`; Pusher và email chưa xử lý ở đây, thuộc 14.8/14.9. Under/overpayment, account mismatch, late payment, outgoing, missing/unknown/multiple code đều không auto-paid và được lưu manual-review/ignored classification.
+
+**Kiểm thử đã chạy:** `SePayPaymentMatcherTest` **6 tests/37 assertions**; `SePayWebhookProcessingJobTest` **2 tests/10 assertions**; regression `SePay|Payment|Checkout` **63 tests/323 assertions**; full regression **515 tests/4502 assertions**. Coverage gồm exact match, payment/order/history, event after commit, manual-review matrix, outgoing, late payment, duplicate job, duplicate external transaction và rollback khi provider normalization lỗi. `route:list`, PHP lint, dashboard syntax và diff checks đạt.
 
 **Kết quả cần đạt:** trạng thái payment/order nhất quán dưới retry và race.
 
 **Kế hoạch test:** matrix matching, duplicate race, webhook-vs-expiry race, rollback injection và history audit.
 
-### [ ] Task 14.8 — Pusher realtime cho Checkout
+### [x] Task 14.8 — Pusher realtime cho Checkout
 
 **Dependency:** 14.5, 14.7.
 
-- [ ] Broadcast event tối thiểu: public ID, status, paid_at; không PII/account/payload.
-- [ ] Private channel `payment.{public_id}` với authorization theo customer hoặc checkout session/token.
-- [ ] Laravel Echo/Pusher client subscribe, reconnect và chuyển trang success server-confirmed.
-- [ ] Polling fallback khi auth/socket/Pusher thất bại.
-- [ ] Tách queue broadcast; lỗi broadcast không rollback/đổi payment.
+**Kết quả thực tế 25/11/2026 — DONE:** đã triển khai broadcast `OrderPaymentConfirmed` sau commit lên queue `broadcasts`, private channel `payment.{public_id}`, endpoint authorize riêng nằm dưới cookie path cho guest/customer, Echo/Pusher subscribe + reconnect và xác nhận trạng thái lại từ status endpoint. Polling vẫn là fallback/source of truth. Runtime sandbox đã xác nhận webhook → queue → Pusher → thông báo success.
+
+**Kiểm thử và QA:** `PaymentRealtimeTest` + `CheckoutPaymentPageTest` đạt **17 tests/102 assertions**; Vite production build, PHP lint, route broadcast và JavaScript/dashboard syntax đạt. Runtime sandbox đã xác nhận webhook → queue → Pusher → thông báo success. Full regression tại thời điểm Task 14.8 đạt **520 passed/4522 assertions**, còn **1 failure** ở `SePayInfrastructureTest`; test contract này đã được đồng bộ trong Task 14.9 và full regression hiện tại đạt **531 passed/4548 assertions**.
+
+**Trạng thái triển khai 25/11/2026 — DONE:** hoàn tất sau khi broadcast contract, channel authorization, frontend reconnect/fallback, targeted tests và runtime sandbox đạt.
+
+- [x] Broadcast event tối thiểu: public ID, status, paid_at; không PII/account/payload.
+- [x] Private channel `payment.{public_id}` với authorization theo customer hoặc checkout session/token.
+- [x] Laravel Echo/Pusher client subscribe, reconnect và chuyển trang success server-confirmed.
+- [x] Polling fallback khi auth/socket/Pusher thất bại.
+- [x] Tách queue broadcast; lỗi broadcast không rollback/đổi payment.
 
 **Kết quả cần đạt:** checkout cập nhật gần realtime mà không coi socket là source of truth.
 
 **Kế hoạch test:** broadcast fake/payload leak scan/channel authorization, JS reconnect/stale event, polling parity.
 
-### [ ] Task 14.9 — Redis queue và email xác nhận
+### [x] Task 14.9 — Redis queue và email xác nhận
 
 **Dependency:** 14.2, 14.7.
 
-- [ ] Listener after-commit dispatch `SendPaymentConfirmationEmailJob` lên queue `emails`.
-- [ ] Job idempotent theo order/payment event, retry/backoff/timeout và failed job visibility.
-- [ ] Mailable VI/EN chỉ dùng order snapshot; không đưa raw bank payload/secret.
-- [ ] Worker/Supervisor hoặc Windows service runbook; restart sau deploy.
-- [ ] Alert khi failed jobs vượt ngưỡng; retry thủ công có audit.
+- [x] Bổ sung `recipient_email` và `locale` snapshot vào `orders`; migration additive, nullable để giữ nguyên order cũ.
+- [x] Guest dùng SePay phải nhập email hợp lệ; customer dùng email tài khoản do server resolve, không tin email gửi từ browser.
+- [x] Listener after-commit dispatch `SendPaymentConfirmationEmailJob` lên queue `emails`.
+- [x] Job idempotent theo order/payment event, retry/backoff/timeout và failed job visibility.
+- [x] Mailable VI/EN chỉ dùng order snapshot; không đưa raw bank payload/secret.
+- [x] Admin settings cho phép chỉnh subject, intro và footer VI/EN bằng text thuần với placeholder allowlist.
+- [x] Worker/Supervisor hoặc Windows service runbook; restart sau deploy.
+- [x] Alert khi failed jobs vượt ngưỡng; retry thủ công có audit.
+- [x] Tự động requeue delivery failed theo scheduler với backoff và giới hạn tổng số lần thử.
 
-**Kết quả cần đạt:** email bền vững, không chặn webhook và không gửi trùng.
+**Phạm vi bổ sung đã chốt 25/11/2026:** guest SePay có trường email ở checkout và nhận email khi thanh toán thành công. Email được snapshot vào order tại thời điểm checkout; customer không được ghi đè email tài khoản bằng input từ browser. Guest COD có thể bỏ trống email vì không thuộc luồng xác nhận thanh toán online.
 
-**Kế hoạch test:** Queue/Mail fake, duplicate event, retry failure, locale, serialization và Redis integration smoke test.
+**Kết quả cần đạt:** email bền vững cho customer và guest SePay, không chặn webhook và không gửi trùng.
 
-### [ ] Task 14.10 — Đối soát và quản trị ngoại lệ
+**Kế hoạch test:** guest/customer email validation và tamper guard, migration snapshot, Queue/Mail fake, duplicate event, retry failure, locale, serialization và Redis integration smoke test.
+
+**Kết quả thực tế 25/11/2026 — DONE:** đã thêm snapshot `recipient_email`/`locale` cho order, bắt buộc email hợp lệ khi guest chọn SePay, giữ customer email do server resolve, listener `OrderPaymentConfirmed` dispatch job idempotent lên Redis queue `emails`, mailable VI/EN dùng order snapshot, template subject/intro/footer chỉnh được trong Admin Settings bằng text thuần, retry nhanh trong job và tự động requeue delivery failed theo scheduler với giới hạn tổng số lần thử, failed-email health check, manual retry audit log và runbook worker Windows/Redis.
+
+**Kiểm thử và QA:** `PaymentEmailQueueTest` + `AdminSystemSettingTest` đạt **18 tests/90 assertions**; regression mục tiêu Checkout/Payment/Realtime/Expiry đạt **32 tests/126 assertions**; regression settings/mail đạt **25 tests/157 assertions**; full regression đạt **535 tests/4644 assertions**; PHP lint, Node/dashboard syntax, route/scheduler check, migration status và `git diff --check` đạt. Hai migration email snapshot/delivery đã chạy MySQL batch 13.
+
+**Trạng thái triển khai 25/11/2026 — DONE:** hoàn tất sau khi guest/customer snapshot, queue delivery, idempotency, retry/health commands, bounded automatic retry, template VI/EN và full regression đạt.
+
+### [x] Task 14.10 — Đối soát và quản trị ngoại lệ
 
 **Dependency:** 14.3, 14.7.
 
-- [ ] SePay API client timeout/retry/rate-limit ≤3 request/giây và redact token.
-- [ ] Command/job `sepay:reconcile` theo time window/checkpoint, `withoutOverlapping` và single-server lock.
-- [ ] Scheduler 15–30 phút/lần; dùng cùng matcher/idempotency với webhook.
-- [ ] Admin list/detail/filter unmatched, mismatch, late, failed; permission riêng và audit.
-- [ ] Manual match/ignore/refund-note có confirm modal, reason bắt buộc và lock.
-- [ ] KPI webhook lag, pending quá hạn, mismatch và reconciliation failures.
+- [x] SePay API client timeout/retry/rate-limit ≤3 request/giây và redact token.
+- [x] Command/job `sepay:reconcile` theo time window/checkpoint, `withoutOverlapping` và single-server lock.
+- [x] Scheduler 15–30 phút/lần; dùng cùng matcher/idempotency với webhook.
+- [x] Admin list/detail/filter unmatched, mismatch, late, failed; permission riêng và audit.
+- [x] Manual match/ignore/refund-note có confirm modal, reason bắt buộc và lock.
+- [x] KPI webhook lag, pending quá hạn, mismatch và reconciliation failures.
+
+**Kết quả thực tế 25/11/2026 — DONE:** đã thêm `SePayApiClient` dùng bearer token theo sandbox/live, timeout, retry 429/408/5xx, backoff, giới hạn tối đa 3 request/giây và log đã redact. `sepay:reconcile` tạo run theo time window có overlap an toàn, phân trang bằng `since_id`, checkpoint/resume và chạy queue `payments`; scheduler chạy mỗi 15 phút với `withoutOverlapping`/`onOneServer`. Reconciliation dùng chung `SePayPaymentMatcher` với webhook và unique external transaction để chống trùng. Admin có list/detail/filter transaction và run, KPI status, RBAC `payments.view`/`payments.manage`, audit; manual match exact guard, ignore và refund-note bắt buộc reason, lock transaction và không tự gọi refund provider.
+
+**Kiểm thử và QA:** `SePayReconciliationTest` đạt **6 tests/26 assertions**; `AdminPaymentReconciliationTest` đạt **2 tests/12 assertions**; regression mục tiêu liên quan đạt **28 tests/142 assertions**; full regression đạt **543 tests/4682 assertions**. Đã kiểm tra PHP lint, route list, scheduler list, `migrate:status`, Node dashboard syntax và `git diff --check`. Migration `2026_11_25_000030_add_reconciliation_metadata_to_sepay_transactions` đã chạy MySQL batch 14.
 
 **Kết quả cần đạt:** phát hiện giao dịch mất webhook và xử lý sai lệch có truy vết.
 
@@ -444,6 +475,10 @@ REDIS_QUEUE=default
 - [ ] Checklist chuyển Live: backup, HTTPS, secret rotation, account/code filters, smoke transaction nhỏ.
 - [ ] Feature flag/kill switch chỉ chặn checkout mới; vẫn nhận webhook/đối soát cho order đang chờ.
 - [ ] Rollback không drop payment data; quy trình rotate secret/token và incident response.
+
+**Tiến độ triển khai 25/11/2026 — IN PROGRESS:** đã cập nhật runbook `docs/sepay-payment-operations.md`, mẫu `.env.example`, README và test contract vận hành. Kill switch `SEPAY_ENABLED=false` được kiểm chứng chỉ chặn checkout mới nhưng vẫn cho phép tạo reconciliation run và nhận webhook; sandbox/live profile được kiểm tra tách credential/endpoint. Phần còn chờ là sandbox E2E với account/Test mode, tunnel HTTPS ổn định và giao dịch mô phỏng thực tế; chưa đánh dấu hoàn tất task trước khi có bằng chứng provider.
+
+**Kiểm thử code hiện tại:** `SePayOperationsTest` đạt **3 tests/20 assertions**; regression mục tiêu SePay/Webhook/Reconciliation/Realtime/Email đạt **43 tests/160 assertions**. PHP lint, Node dashboard syntax và `git diff --check` đạt.
 
 **Kết quả cần đạt:** chuyển môi trường có kiểm soát, không trộn sandbox/live.
 

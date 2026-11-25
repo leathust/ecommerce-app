@@ -881,6 +881,18 @@
   });
   // Checkout form: keep the native POST, but lock the submit control while it is in flight.
   document.querySelectorAll('[data-checkout-form]').forEach((form) => {
+    const guestEmail = form.querySelector('[data-checkout-email]');
+    const paymentMethods = form.querySelectorAll('input[name="payment_method"]');
+    const syncGuestEmailRequirement = () => {
+      if (!guestEmail) return;
+      const sepaySelected = form.querySelector('input[name="payment_method"][value="sepay"]:checked');
+      guestEmail.required = Boolean(sepaySelected);
+      guestEmail.setAttribute('aria-required', String(Boolean(sepaySelected)));
+    };
+
+    paymentMethods.forEach((input) => input.addEventListener('change', syncGuestEmailRequirement));
+    syncGuestEmailRequirement();
+
     form.addEventListener('submit', (event) => {
       if (form.dataset.submitting === 'true') {
         event.preventDefault();

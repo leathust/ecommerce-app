@@ -13,6 +13,9 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         $schedule->command('sepay:expire-payments')->everyMinute()->withoutOverlapping();
+        $schedule->command('sepay:reconcile')->everyFifteenMinutes()->withoutOverlapping()->onOneServer();
+        $schedule->command('payments:email-health --threshold=10')->everyFiveMinutes()->withoutOverlapping();
+        $schedule->command('payments:retry-failed-emails')->everyFiveMinutes()->withoutOverlapping();
     }
 
     /**

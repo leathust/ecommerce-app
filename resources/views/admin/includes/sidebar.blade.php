@@ -46,6 +46,14 @@
           </li>
         @endcan
 
+        @can('payments.view')
+          <li class="{{ request()->routeIs('admin.payments.*') ? 'active' : '' }}">
+            <a href="{{ route('admin.payments.reconciliation') }}">
+              <i class="fa-solid fa-money-check-dollar"></i>Đối soát thanh toán
+            </a>
+          </li>
+        @endcan
+
         @can('customers.view')
           <li class="{{ request()->routeIs('admin.customers', 'admin.customers.*') ? 'active' : '' }}">
             <a href="{{ route('admin.customers') }}">

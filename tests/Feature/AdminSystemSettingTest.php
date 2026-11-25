@@ -110,6 +110,38 @@ class AdminSystemSettingTest extends TestCase
         ]);
     }
 
+    public function test_super_admin_can_update_payment_email_template_settings(): void
+    {
+        $actor = $this->userWithRole(Role::SUPER_ADMIN);
+
+        $this->actingAs($actor)
+            ->put(route('admin.settings.update', 'mail'), [
+                'settings' => [
+                    'mail.from_name' => 'Ecommerce Support',
+                    'mail.payment_confirmation_subject_vi' => 'Đã nhận tiền đơn :order_code',
+                    'mail.payment_confirmation_subject_en' => 'Paid order :order_code',
+                    'mail.payment_confirmation_intro_vi' => 'Xin chào :name, đơn :order_code đã được thanh toán.',
+                    'mail.payment_confirmation_intro_en' => 'Hello :name, order :order_code is paid.',
+                    'mail.payment_confirmation_footer_vi' => 'Bộ phận chăm sóc khách hàng.',
+                    'mail.payment_confirmation_footer_en' => 'Customer care team.',
+                ],
+            ])
+            ->assertRedirect(route('admin.settings.index', ['group' => 'mail']))
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('settings', [
+            'setting_key' => 'mail.payment_confirmation_subject_vi',
+            'setting_value' => 'Đã nhận tiền đơn :order_code',
+            'updated_by' => $actor->id,
+        ]);
+        $this->actingAs($actor)
+            ->get(route('admin.settings.index', ['group' => 'mail']))
+            ->assertOk()
+            ->assertSee('name="settings[mail.payment_confirmation_subject_vi]"', false)
+            ->assertSee('Đã nhận tiền đơn :order_code', false)
+            ->assertSee('name="settings[mail.payment_confirmation_intro_en]"', false);
+    }
+
     public function test_admin_without_view_permission_cannot_open_page_or_see_navigation(): void
     {
         $catalogManager = $this->userWithRole('catalog_manager');

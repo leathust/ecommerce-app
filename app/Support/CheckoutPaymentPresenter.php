@@ -94,6 +94,8 @@ class CheckoutPaymentPresenter
             'paid_at_iso' => $paidAt?->toIso8601String(),
             'paid_at_label' => $paidAt?->format('d/m/Y H:i'),
             'poll_after_ms' => $this->pollAfterMs($state),
+            'broadcast_channel' => 'payment.'.$attempt->public_id,
+            'broadcast_auth_url' => $this->pathUrl('checkout/payments/broadcast-auth'),
             // Keep polling on the hostname that issued the guest access cookie,
             // while preserving a subdirectory deployment such as /ecommerce-app.
             'status_url' => $this->routePath('checkout.payment.status', ['paymentAttempt' => $attempt->public_id]),
@@ -153,5 +155,20 @@ class CheckoutPaymentPresenter
         $path = parse_url($url, PHP_URL_PATH);
 
         return is_string($path) && $path !== '' ? $path : $url;
+    }
+
+    private function pathUrl(string $path): string
+    {
+        $url = url($path);
+        $parsed = parse_url($url, PHP_URL_PATH);
+        $configuredPath = parse_url((string) config('app.url', ''), PHP_URL_PATH);
+        $basePath = is_string($configuredPath) ? rtrim($configuredPath, '/') : '';
+        $parsed = is_string($parsed) && $parsed !== '' ? $parsed : '/'.ltrim($path, '/');
+
+        if ($basePath !== '' && $parsed !== $basePath && ! str_starts_with($parsed, $basePath.'/')) {
+            return $basePath.'/'.ltrim($parsed, '/');
+        }
+
+        return $parsed;
     }
 }

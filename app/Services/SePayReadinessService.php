@@ -42,12 +42,22 @@ class SePayReadinessService
 
         if ($enabled && in_array($environment, $supported, true)) {
             $account = config("sepay.environments.{$environment}", []);
-            foreach (['webhook_secret', 'api_token'] as $key) {
+            foreach (['api_token'] as $key) {
                 $this->check($checks, "sepay_{$key}", filled($account[$key] ?? null), "Thiếu cấu hình SePay {$key} cho {$environment}.");
             }
 
+            $auth = strtolower((string) ($account['webhook_auth'] ?? 'hmac'));
+            $this->check($checks, 'webhook_auth', in_array($auth, ['hmac', 'apikey'], true), 'SEPAY webhook auth phải là hmac hoặc apikey.');
+            $this->check(
+                $checks,
+                'sepay_webhook_credential',
+                $auth === 'apikey' ? filled($account['webhook_api_key'] ?? null) : filled($account['webhook_secret'] ?? null),
+                $auth === 'apikey' ? "Thiếu cấu hình SePay webhook API Key cho {$environment}." : "Thiếu cấu hình SePay webhook secret cho {$environment}.",
+            );
             $webhookReady = (bool) ($account['webhook_enabled'] ?? false)
-                && filled($account['webhook_secret'] ?? null);
+                && in_array($auth, ['hmac', 'apikey'], true)
+                && ($auth === 'apikey' ? filled($account['webhook_api_key'] ?? null) : filled($account['webhook_secret'] ?? null));
+
             $this->check($checks, 'queue_connection', $queueReady, 'QUEUE_CONNECTION phải là redis khi bật xử lý webhook SePay.');
             $this->check($checks, 'broadcast_driver', config('broadcasting.default') === 'pusher', 'BROADCAST_DRIVER phải là pusher khi bật cập nhật realtime.');
             foreach (['app_id', 'key', 'secret'] as $key) {

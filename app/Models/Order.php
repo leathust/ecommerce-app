@@ -33,7 +33,7 @@ class Order extends Model
 
     protected $fillable = [
         'order_code', 'checkout_idempotency_key', 'user_id', 'status', 'payment_method', 'payment_status', 'paid_at',
-        'subtotal', 'shipping_fee', 'total_amount', 'recipient_name', 'recipient_phone',
+        'subtotal', 'shipping_fee', 'total_amount', 'recipient_name', 'recipient_phone', 'recipient_email', 'locale',
         'shipping_address', 'note', 'cancel_reason', 'confirmed_at', 'processing_at',
         'shipped_at', 'delivered_at', 'cancelled_at', 'stock_deducted_at', 'stock_restored_at',
     ];

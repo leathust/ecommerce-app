@@ -40,6 +40,7 @@ class CheckoutPageTest extends TestCase
             ->assertSee(__('frontend.checkout.page_title'))
             ->assertSee('name="idempotency_key"', false)
             ->assertSee('name="recipient_name"', false)
+            ->assertSee('name="recipient_email"', false)
             ->assertSee('name="payment_method"', false)
             ->assertSee('300.000', false);
 
@@ -52,14 +53,19 @@ class CheckoutPageTest extends TestCase
 
     public function test_customer_checkout_page_prefills_account_name_and_phone(): void
     {
-        $user = User::factory()->customerProfile()->create(['name' => 'Nguyen Van A', 'phone' => '0901234567']);
+        $user = User::factory()->customerProfile()->create([
+            'name' => 'Nguyen Van A',
+            'phone' => '0901234567',
+            'email' => 'account@example.test',
+        ]);
         $cart = Cart::factory()->forCustomer($user)->create();
         CartItem::factory()->for($cart)->for(Product::factory()->create(['price' => 100000]))->create(['quantity' => 1]);
 
         $this->actingAs($user)->get(route('checkout'))
             ->assertOk()
             ->assertSee('Nguyen Van A')
-            ->assertSee('0901234567');
+            ->assertSee('0901234567')
+            ->assertSee('account@example.test');
     }
 
     public function test_admin_and_inactive_customer_cannot_open_checkout(): void
@@ -239,6 +245,7 @@ class CheckoutPageTest extends TestCase
         return [
             'recipient_name' => 'Test User',
             'recipient_phone' => '0901234567',
+            'recipient_email' => 'guest@example.test',
             'shipping_address' => '123 Test Street',
             'note' => null,
             'payment_method' => $method,

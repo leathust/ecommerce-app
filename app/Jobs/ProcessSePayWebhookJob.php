@@ -3,21 +3,21 @@
 namespace App\Jobs;
 
 use App\Models\SePayWebhookReceipt;
+use App\Services\SePayPaymentMatcher;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Throwable;
 
 class ProcessSePayWebhookJob implements ShouldBeUnique, ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 5;
-
     public int $timeout = 20;
-
     public int $uniqueFor = 900;
 
     public function __construct(public readonly int $receiptId)
@@ -30,14 +30,12 @@ class ProcessSePayWebhookJob implements ShouldBeUnique, ShouldQueue
         return 'sepay-webhook-receipt:'.$this->receiptId;
     }
 
-    public function handle(): void
+    public function handle(SePayPaymentMatcher $matcher): void
     {
-        // Business matching is deliberately owned by Task 14.7. Keeping the
-        // receipt queued makes the durable handoff observable and recoverable.
-        SePayWebhookReceipt::query()->whereKey($this->receiptId)->lockForUpdate()->first();
+        $matcher->processReceiptById($this->receiptId);
     }
 
-    public function failed(\Throwable $exception): void
+    public function failed(Throwable $exception): void
     {
         SePayWebhookReceipt::query()->whereKey($this->receiptId)->update([
             'status' => 'failed',

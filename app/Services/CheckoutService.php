@@ -63,11 +63,20 @@ class CheckoutService
             if ($method === 'cod' && ! $this->settings->get('payment.cod_enabled')) throw ValidationException::withMessages(['payment_method'=>__('frontend.checkout.payment_disabled')]);
             if ($method === 'sepay') $this->ensureSePayReady($totalCents);
 
+            $recipientEmail = $customer?->email ?? ($data['recipient_email'] ?? null);
+            $recipientEmail = $recipientEmail !== null
+                ? mb_strtolower(trim((string) $recipientEmail))
+                : null;
+            $locale = in_array(app()->getLocale(), ['vi', 'en'], true)
+                ? app()->getLocale()
+                : 'vi';
+
             $order = Order::create([
                 'order_code'=>$this->newCode('ORD'),'checkout_idempotency_key'=>$data['idempotency_key'],'user_id'=>$customer?->id,
                 'status'=>'pending','payment_method'=>$method === 'sepay' ? 'bank_transfer' : 'cod','payment_status'=>'unpaid',
                 'subtotal'=>$subtotalCents/100,'shipping_fee'=>$shipping/100,'total_amount'=>$totalCents/100,
                 'recipient_name'=>$data['recipient_name'],'recipient_phone'=>$data['recipient_phone'],
+                'recipient_email'=>$recipientEmail, 'locale'=>$locale,
                 'shipping_address'=>$data['shipping_address'],'note'=>$data['note'] ?? null,
             ]);
             $order->items()->createMany($snapshots);

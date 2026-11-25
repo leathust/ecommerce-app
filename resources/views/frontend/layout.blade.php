@@ -30,6 +30,7 @@
   @if($pageDescription)<meta name="description" content="{{ $pageDescription }}" />@endif
   <link rel="canonical" href="{{ $pageCanonical }}" />
   <meta name="robots" content="{{ $pageRobots }}" />
+  <meta name="csrf-token" content="{{ csrf_token() }}" />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="{{ $pageTitle }}" />
   @if($pageDescription)<meta property="og:description" content="{{ $pageDescription }}" />@endif
@@ -119,6 +120,7 @@
     aria-atomic="true"
     hidden
   ></div>
+  @stack('scripts')
   <script src="{{ asset('assets/frontend/js/main.js') }}?v={{ time() }}" defer></script>
 </body>
 </html>

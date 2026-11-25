@@ -27,4 +27,5 @@ class PaymentAttempt extends Model
     public function order(): BelongsTo { return $this->belongsTo(Order::class); }
     public function transactions(): HasMany { return $this->hasMany(SePayTransaction::class); }
     public function statusHistories(): HasMany { return $this->hasMany(PaymentStatusHistory::class); }
+    public function emailDeliveries(): HasMany { return $this->hasMany(PaymentEmailDelivery::class); }
 }

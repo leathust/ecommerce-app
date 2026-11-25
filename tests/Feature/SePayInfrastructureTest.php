@@ -57,7 +57,7 @@ class SePayInfrastructureTest extends TestCase
 
         $this->assertFalse($result['ready']);
         $this->assertFalse($result['checkout_ready']);
-        $this->assertFalse($result['checks']['sepay_webhook_secret']['ok']);
+        $this->assertFalse($result['checks']['sepay_webhook_credential']['ok']);
         $this->assertFalse($result['checks']['queue_connection']['ok']);
         $this->assertFalse($result['checks']['broadcast_driver']['ok']);
     }

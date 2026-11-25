@@ -20,9 +20,13 @@ class SePayWebhookTest extends TestCase
             'sepay.enabled' => true,
             'sepay.environment' => 'sandbox',
             'sepay.environments.sandbox.webhook_enabled' => true,
+            'sepay.environments.sandbox.webhook_auth' => 'hmac',
             'sepay.environments.sandbox.webhook_secret' => 'sandbox-test-secret',
+            'sepay.environments.sandbox.webhook_api_key' => null,
             'sepay.environments.live.webhook_enabled' => false,
+            'sepay.environments.live.webhook_auth' => 'hmac',
             'sepay.environments.live.webhook_secret' => null,
+            'sepay.environments.live.webhook_api_key' => null,
             'queue.default' => 'sync',
         ]);
     }
@@ -44,6 +48,50 @@ class SePayWebhookTest extends TestCase
             'status' => 'queued',
         ]);
         Queue::assertPushed(\App\Jobs\ProcessSePayWebhookJob::class, 1);
+    }
+
+    public function test_api_key_webhook_accepts_apikey_authorization_without_hmac_headers(): void
+    {
+        \Illuminate\Support\Facades\Queue::fake();
+        config([
+            'sepay.environments.sandbox.webhook_auth' => 'apikey',
+            'sepay.environments.sandbox.webhook_api_key' => 'sandbox-api-key',
+            'sepay.environments.sandbox.webhook_secret' => null,
+        ]);
+        $body = $this->payloadBody();
+
+        $response = $this->withServerVariables([
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_AUTHORIZATION' => 'Apikey sandbox-api-key',
+        ])->call('POST', route('webhooks.sepay.store', ['environment' => 'sandbox']), [], [], [], [], $body);
+
+        $response->assertOk()->assertExactJson(['success' => true]);
+        $this->assertDatabaseHas('sepay_webhook_receipts', ['environment' => 'sandbox', 'external_event_id' => '92704']);
+    }
+
+    public function test_api_key_webhook_rejects_missing_or_wrong_key(): void
+    {
+        config([
+            'sepay.environments.sandbox.webhook_auth' => 'apikey',
+            'sepay.environments.sandbox.webhook_api_key' => 'sandbox-api-key',
+            'sepay.environments.sandbox.webhook_secret' => null,
+        ]);
+        $body = $this->payloadBody();
+        $url = route('webhooks.sepay.store', ['environment' => 'sandbox']);
+
+        $this->withServerVariables(['CONTENT_TYPE' => 'application/json'])
+            ->call('POST', $url, [], [], [], [], $body)
+            ->assertUnauthorized()
+            ->assertJson(['error' => 'invalid_api_key']);
+
+        $this->withServerVariables([
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_AUTHORIZATION' => 'Apikey wrong-key',
+        ])->call('POST', $url, [], [], [], [], $body)
+            ->assertUnauthorized()
+            ->assertJson(['error' => 'invalid_api_key']);
+
+        $this->assertDatabaseCount('sepay_webhook_receipts', 0);
     }
 
     public function test_signature_is_bound_to_raw_body_and_tampering_is_rejected(): void

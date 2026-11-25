@@ -31,6 +31,9 @@
         @can('orders.view')
           <li><a href="{{ route('admin.orders') }}"><i class="fa-solid fa-receipt"></i>Đơn hàng</a></li>
         @endcan
+        @can('payments.view')
+          <li><a href="{{ route('admin.payments.reconciliation') }}"><i class="fa-solid fa-money-check-dollar"></i>Đối soát thanh toán</a></li>
+        @endcan
         @can('customers.view')
           <li><a href="{{ route('admin.customers') }}"><i class="fa-solid fa-users"></i>Khách hàng</a></li>
         @endcan

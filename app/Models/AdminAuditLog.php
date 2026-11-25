@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\SePayTransaction;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
@@ -26,6 +27,11 @@ class AdminAuditLog extends Model
         'menu.status_updated' => 'Đổi trạng thái menu',
         'menu.moved' => 'Di chuyển menu',
         'menu.reordered' => 'Sắp xếp menu',
+        'payment.reconciliation_started' => 'Bắt đầu đối soát thanh toán',
+        'payment.reconciliation_completed' => 'Hoàn tất đối soát thanh toán',
+        'payment.manual_matched' => 'Khớp giao dịch thanh toán thủ công',
+        'payment.manual_ignored' => 'Bỏ qua giao dịch thanh toán',
+        'payment.refund_note_added' => 'Ghi chú hoàn tiền thanh toán',
     ];
 
     public const SUBJECT_LABELS = [
@@ -33,6 +39,7 @@ class AdminAuditLog extends Model
         'role' => 'Vai trò',
         'setting' => 'Cài đặt hệ thống',
         'menu' => 'Menu website',
+        'sepay_transaction' => 'Giao dịch SePay',
     ];
 
     public const UPDATED_AT = null;
@@ -77,6 +84,7 @@ class AdminAuditLog extends Model
             Role::class => self::SUBJECT_LABELS['role'],
             Setting::class => self::SUBJECT_LABELS['setting'],
             Menu::class => self::SUBJECT_LABELS['menu'],
+            SePayTransaction::class => self::SUBJECT_LABELS['sepay_transaction'],
             default => class_basename($this->subject_type),
         };
     }

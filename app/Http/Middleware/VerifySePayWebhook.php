@@ -18,7 +18,13 @@ class VerifySePayWebhook
         }
 
         $account = config("sepay.environments.{$environment}", []);
-        if (! ($account['webhook_enabled'] ?? false) || ! filled($account['webhook_secret'] ?? null)) {
+        $webhookEnabled = (bool) ($account['webhook_enabled'] ?? false);
+        $webhookAuth = strtolower((string) ($account['webhook_auth'] ?? 'hmac'));
+        $hasCredential = $webhookAuth === 'apikey'
+            ? filled($account['webhook_api_key'] ?? null)
+            : filled($account['webhook_secret'] ?? null);
+
+        if (! $webhookEnabled || ! in_array($webhookAuth, ['hmac', 'apikey'], true) || ! $hasCredential) {
             return response()->json(['success' => false, 'error' => 'webhook_unavailable'], 404);
         }
 
@@ -33,17 +39,29 @@ class VerifySePayWebhook
             return response()->json(['success' => false, 'error' => 'body_too_large'], 413);
         }
 
-        $timestamp = (string) $request->header('X-SePay-Timestamp', '');
-        $signature = trim((string) $request->header('X-SePay-Signature', ''));
-        $tolerance = max(0, (int) config('sepay.webhook_timestamp_tolerance_seconds', 300));
+        $timestamp = null;
 
-        if (! preg_match('/^\d+$/', $timestamp) || abs(now()->timestamp - (int) $timestamp) > $tolerance) {
-            return response()->json(['success' => false, 'error' => 'invalid_timestamp'], 401);
-        }
+        if ($webhookAuth === 'apikey') {
+            $authorization = trim((string) $request->header('Authorization', ''));
+            $prefix = 'Apikey ';
 
-        $expected = 'sha256='.hash_hmac('sha256', $timestamp.'.'.$rawBody, (string) $account['webhook_secret']);
-        if (! preg_match('/^sha256=[a-f0-9]{64}$/i', $signature) || ! hash_equals($expected, strtolower($signature))) {
-            return response()->json(['success' => false, 'error' => 'invalid_signature'], 401);
+            if (! str_starts_with($authorization, $prefix)
+                || ! hash_equals((string) $account['webhook_api_key'], substr($authorization, strlen($prefix)))) {
+                return response()->json(['success' => false, 'error' => 'invalid_api_key'], 401);
+            }
+        } else {
+            $timestamp = (string) $request->header('X-SePay-Timestamp', '');
+            $signature = trim((string) $request->header('X-SePay-Signature', ''));
+            $tolerance = max(0, (int) config('sepay.webhook_timestamp_tolerance_seconds', 300));
+
+            if (! preg_match('/^\d+$/', $timestamp) || abs(now()->timestamp - (int) $timestamp) > $tolerance) {
+                return response()->json(['success' => false, 'error' => 'invalid_timestamp'], 401);
+            }
+
+            $expected = 'sha256='.hash_hmac('sha256', $timestamp.'.'.$rawBody, (string) $account['webhook_secret']);
+            if (! preg_match('/^sha256=[a-f0-9]{64}$/i', $signature) || ! hash_equals($expected, strtolower($signature))) {
+                return response()->json(['success' => false, 'error' => 'invalid_signature'], 401);
+            }
         }
 
         $decoded = json_decode($rawBody, true);
